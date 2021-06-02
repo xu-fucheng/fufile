@@ -1,0 +1,6 @@
+# Except this file !
+target
+.idea
+.DS_Store
+*.log
+*.iml
