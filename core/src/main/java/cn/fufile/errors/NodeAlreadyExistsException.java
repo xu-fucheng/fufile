@@ -18,7 +18,7 @@ package cn.fufile.errors;
 /**
  * Indicates that the node to be created already exists.
  */
-public class NodeAlreadyExistsException extends FilepiggerException {
+public class NodeAlreadyExistsException extends FufileException {
 
     public NodeAlreadyExistsException(String message) {
         super(message);

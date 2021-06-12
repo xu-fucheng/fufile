@@ -15,22 +15,29 @@
  */
 package cn.fufile;
 
+import org.apache.log4j.BasicConfigurator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
 
-public class Filepigger {
+public class FufileStorageServer {
+
+    private static Logger logger = LoggerFactory.getLogger(FufileStorageServer.class);
 
     public static void main(String[] args) throws IOException {
+        BasicConfigurator.configure();
         Properties properties = new Properties();
         properties.load(new FileInputStream(args[0]));
-        System.out.println(properties.get("data.dir"));
+        logger.debug(properties.get("data.dir").toString());
 
 
 
 //        FileTree dirTree = new FileTree();
 //
-//        FilepiggerSelector selector = new FilepiggerSelector(Selector.open());
+//        FufileSelector selector = new FufileSelector(Selector.open());
 //        selector.bind(new InetSocketAddress(9000));
 //        while (true) {
 //            selector.pool();

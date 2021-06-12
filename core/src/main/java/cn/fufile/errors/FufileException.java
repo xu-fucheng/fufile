@@ -13,7 +13,29 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package cn.fufile.network;
+package cn.fufile.errors;
 
-public class FilepiggerChannel {
+/**
+ * The base class of all other Filepigger exceptions
+ */
+public class FufileException extends RuntimeException{
+
+    private final static long serialVersionUID = 1L;
+
+    public FufileException() {
+        super();
+    }
+
+    public FufileException(String message) {
+        super(message);
+    }
+
+    public FufileException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    public FufileException(Throwable cause) {
+        super(cause);
+    }
+
 }

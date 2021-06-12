@@ -26,7 +26,7 @@ import java.nio.charset.Charset;
 import java.util.Iterator;
 import java.util.Set;
 
-public class FilepiggerSelector {
+public class FufileSelector {
 
     private final Selector selector;
 
@@ -34,7 +34,7 @@ public class FilepiggerSelector {
      * Create a new nioSelector.
      * @param selector
      */
-    public FilepiggerSelector(Selector selector) {
+    public FufileSelector(Selector selector) {
             this.selector = selector;
     }
 

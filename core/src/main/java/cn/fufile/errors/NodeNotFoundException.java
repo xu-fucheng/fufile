@@ -18,7 +18,7 @@ package cn.fufile.errors;
 /**
  * Indicates that the desired node was not found.
  */
-public class NodeNotFoundException extends FilepiggerException {
+public class NodeNotFoundException extends FufileException {
 
     public NodeNotFoundException(String message) {
         super(message);

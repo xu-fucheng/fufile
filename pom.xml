@@ -56,7 +56,7 @@
         <module>client</module>
         <module>example</module>
         <module>name-server</module>
-        <module>data-server</module>
+        <module>storage-server</module>
     </modules>
 
     <properties>

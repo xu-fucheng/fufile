@@ -15,7 +15,7 @@
  */
 package cn.fufile.example;
 
-import cn.fufile.network.FilepiggerSelector;
+import cn.fufile.network.FufileSelector;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -24,7 +24,7 @@ import java.nio.channels.Selector;
 public class UploadFile {
 
     public static void main(String[] args) throws IOException {
-        FilepiggerSelector selector = new FilepiggerSelector(Selector.open());
+        FufileSelector selector = new FufileSelector(Selector.open());
         selector.connect(new InetSocketAddress("localhost", 9000));
         while (true){
             selector.pool();
@@ -34,7 +34,7 @@ public class UploadFile {
 //        properties.setProperty("server", "localhost:9000");
 //        FileInputStream fileInputStream = new FileInputStream(new File("config/server.properties"));
 //
-//        FilepiggerClient filepiggerClient = new FilepiggerClient(properties);
+//        FufileClient filepiggerClient = new FufileClient(properties);
 //
 //        filepiggerClient.upload(fileInputStream);
 

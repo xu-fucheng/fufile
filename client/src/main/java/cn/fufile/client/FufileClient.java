@@ -13,7 +13,20 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package cn.fufile.server;
+package cn.fufile.client;
 
-public class Server {
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Properties;
+
+public class FufileClient {
+
+    public FufileClient(Properties properties) {
+
+    }
+
+    public void upload(InputStream inputStream) throws IOException {
+        int num = inputStream.available();
+        System.out.println(num);
+    }
 }

@@ -15,7 +15,7 @@
  */
 package cn.fufile.tree;
 
-import cn.fufile.errors.FilepiggerException;
+import cn.fufile.errors.FufileException;
 import cn.fufile.errors.NodeAlreadyExistsException;
 import cn.fufile.errors.NodeNotFoundException;
 
@@ -61,7 +61,7 @@ public class FileTree implements TreeHandler, Iterable<TreeNode> {
      * @param treeNode {@link FileNode} or {@link DirNode}.
      */
     @Override
-    public void createFileOrDirNode(TreeNode treeNode) throws FilepiggerException {
+    public void createFileOrDirNode(TreeNode treeNode) throws FufileException {
         String path = treeNode.getDir();
         String[] paths = path.split("/");
         TreeNode presentNode = rootDirNode;
@@ -125,7 +125,7 @@ public class FileTree implements TreeHandler, Iterable<TreeNode> {
      * @return
      */
     @Override
-    public TreeNode getFileOrDirNode(String path, boolean isFile) throws FilepiggerException {
+    public TreeNode getFileOrDirNode(String path, boolean isFile) throws FufileException {
         String[] paths = path.split("/");
         TreeNode presentNode = rootDirNode;
         boolean isLast = false;
@@ -158,7 +158,7 @@ public class FileTree implements TreeHandler, Iterable<TreeNode> {
      * Removes a file or directory node.
      */
     @Override
-    public void removeFileOrDirNode(String path, boolean isFile) throws FilepiggerException {
+    public void removeFileOrDirNode(String path, boolean isFile) throws FufileException {
         TreeNode treeNode = getFileOrDirNode(path, isFile);
         TreeNode lastTreeNode = treeNode.getLastNode();
         if (lastTreeNode == null) {
