@@ -15,5 +15,55 @@
  */
 package cn.fufile.persistence;
 
+import cn.fufile.tree.FileTree;
+
+import java.io.*;
+import java.nio.ByteBuffer;
+
 public class Snapshot {
+
+    public static final int SNAP_MAGIC = ByteBuffer.wrap("FPSS".getBytes()).getInt();
+
+    private DataOutputStream snapshotStream = null;
+
+    private String snapshotDir;
+
+    private FileTree fileTree;
+
+    private FileHeader fileHeader;
+
+    /**
+     * for test.
+     *
+     * @param snapshotDir
+     */
+    public Snapshot(String snapshotDir) {
+        this.snapshotDir = snapshotDir;
+        this.fileTree = new FileTree();
+    }
+
+    public Snapshot(String snapshotDir, FileTree fileTree) {
+        this.snapshotDir = snapshotDir;
+        this.fileTree = fileTree;
+        fileHeader = new FileHeader(SNAP_MAGIC, 0);
+    }
+
+    public void createClusterSnapshot() throws IOException {
+        FileOutputStream fileOutputStream = new FileOutputStream(snapshotDir);
+        snapshotStream = new DataOutputStream(fileOutputStream);
+        fileHeader.serialize(snapshotStream);
+        fileTree.clusterSerialize(snapshotStream);
+        snapshotStream.close();
+    }
+
+    public void readSnapshot() throws IOException {
+        FileInputStream fileInputStream = new FileInputStream(snapshotDir);
+        DataInputStream dataInputStream = new DataInputStream(fileInputStream);
+        FileHeader fileHeader = new FileHeader();
+        fileHeader.deserialize(dataInputStream);
+        fileTree.deserialize(dataInputStream);
+        System.out.println(SNAP_MAGIC == fileHeader.getMagic());
+        System.out.println(fileHeader.getVersion());
+        System.out.println(dataInputStream.available());
+    }
 }

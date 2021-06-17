@@ -15,6 +15,10 @@
  */
 package cn.fufile.tree;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+
 /**
  * File node.
  */
@@ -24,4 +28,15 @@ public class FileNode extends TreeNode{
         super(dir.substring(dir.lastIndexOf("/") + 1), dir);
     }
 
+    @Override
+    public void serialize(DataOutputStream dataOutputStream) throws IOException {
+        dataOutputStream.writeByte(1);
+        super.serialize(dataOutputStream);
+    }
+
+    @Override
+    public void deserialize(DataInputStream dataInputStream) {
+
+        super.deserialize(dataInputStream);
+    }
 }

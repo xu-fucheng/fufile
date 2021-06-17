@@ -15,12 +15,15 @@
  */
 package cn.fufile.tree;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+
 /**
  * All node classes need to inherit from this class.
  */
 public abstract class TreeNode {
 
-    private long nodeId;
     private String nodeName;
     private int hash;
     private String dir;
@@ -40,6 +43,16 @@ public abstract class TreeNode {
         this.nodeName = nodeName;
         this.hash = nodeName.hashCode();
         this.dir = dir;
+    }
+
+    public void serialize(DataOutputStream dataOutputStream) throws IOException {
+        byte[] bytes = dir.getBytes("utf-8");
+        dataOutputStream.writeInt(bytes.length);
+        dataOutputStream.write(bytes);
+    }
+
+    public void deserialize(DataInputStream dataInputStream) {
+
     }
 
     public int getHash() {

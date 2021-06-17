@@ -13,11 +13,8 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package cn.fufile;
+package cn.fufile.persistence;
 
-public class FufileNameServer {
+public class FileLog {
 
-    public static void main(String[] args) {
-
-    }
 }

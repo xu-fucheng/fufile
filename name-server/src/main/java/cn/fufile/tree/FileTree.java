@@ -19,6 +19,9 @@ import cn.fufile.errors.FufileException;
 import cn.fufile.errors.NodeAlreadyExistsException;
 import cn.fufile.errors.NodeNotFoundException;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -76,6 +79,7 @@ public class FileTree implements TreeHandler, Iterable<TreeNode> {
             String nodeName = paths[i];
             List<TreeNode> childNodes = ((DirNode) presentNode).getChildNodeList();
             if (childNodes == null) {
+                // no child nodes.
                 childNodes = new ArrayList<>();
                 ((DirNode) presentNode).setChildNodeList(childNodes);
                 if (isLast) {
@@ -87,30 +91,36 @@ public class FileTree implements TreeHandler, Iterable<TreeNode> {
                 childNodes.add(dirNode);
                 presentNode = dirNode;
             } else {
+                // (isLast & isFile = true) indicate that you are looking for a file.
                 DichotomyResult dichotomyResult =
                         dichotomy(isLast & isFile, nodeName, nodeName.hashCode(), childNodes, 0, childNodes.size() - 1);
                 if (dichotomyResult.result == DichotomyResultEnum.FIND_HASH_NAME) {
                     if (isLast) {
+                        // Node of the same name is found and is the last node.
                         throw new NodeAlreadyExistsException("The node to be created already exists.");
                     }
                     presentNode = dichotomyResult.treeNode;
                 } else if (dichotomyResult.result == DichotomyResultEnum.FIND_HASH) {
                     if (isLast) {
+                        // Nodes with the same hash are placed at the end of the linked list.
                         treeNode.setParentNode(presentNode);
                         treeNode.setLastNode(dichotomyResult.treeNode);
                         dichotomyResult.treeNode.setNextNode(treeNode);
                         break;
                     }
+                    // Create an intermediate directory.
                     presentNode = new DirNode(nodeName, dirBuilder.toString(), presentNode);
                     presentNode.setLastNode(dichotomyResult.treeNode);
                     dichotomyResult.treeNode.setNextNode(presentNode);
                 } else {
                     int index = dichotomyResult.index;
                     if (isLast) {
+                        // If there is no identical hash node at the end of the directory, the hash node is created.
                         treeNode.setParentNode(presentNode);
                         childNodes.add(index, treeNode);
                         break;
                     }
+                    // Create an intermediate directory.
                     presentNode = new DirNode(nodeName, dirBuilder.toString(), presentNode);
                     childNodes.add(index, presentNode);
                 }
@@ -131,17 +141,20 @@ public class FileTree implements TreeHandler, Iterable<TreeNode> {
         boolean isLast = false;
         for (int i = 1; i < paths.length; i++) {
             if (i == paths.length - 1) {
+                // The last directory or file.
                 isLast = true;
             }
             String nodeName = paths[i];
             List<TreeNode> childNodes = ((DirNode) presentNode).getChildNodeList();
             if (childNodes == null) {
+                // If there are no children, it returns not found.
                 throw new NodeNotFoundException("The desired node was not found.");
             } else {
                 DichotomyResult dichotomyResult =
                         dichotomy(isLast & isFile, nodeName, nodeName.hashCode(), childNodes, 0, childNodes.size() - 1);
                 if (dichotomyResult.result == DichotomyResultEnum.FIND_HASH_NAME) {
                     if (isLast) {
+                        // Returns if the last node was found.
                         dichotomyResult.treeNode.setIndex(dichotomyResult.index);
                         return dichotomyResult.treeNode;
                     }
@@ -163,12 +176,15 @@ public class FileTree implements TreeHandler, Iterable<TreeNode> {
         TreeNode lastTreeNode = treeNode.getLastNode();
         if (lastTreeNode == null) {
             if (treeNode.getNextNode() == null) {
+                // If both the upper and lower nodes are NULL, the current node is removed.
                 ((DirNode) treeNode.getParentNode()).getChildNodeList().remove(treeNode.getIndex());
             } else {
+                // If there is a next node, it is replaced with the next node.
                 ((DirNode) treeNode.getParentNode()).getChildNodeList().set(treeNode.getIndex(), treeNode.getNextNode());
                 treeNode.getNextNode().setLastNode(null);
             }
         } else {
+            // If I had the last node.
             lastTreeNode.setNextNode(treeNode.getNextNode());
             treeNode.getNextNode().setLastNode(lastTreeNode);
         }
@@ -197,6 +213,7 @@ public class FileTree implements TreeHandler, Iterable<TreeNode> {
     private DichotomyResult dichotomy(boolean isFile, String nodeName, int hash, List<TreeNode> childNodes,
                                       int startIndex, int endIndex) {
         if (startIndex > endIndex)
+            // The same hash node was not found.
             return new DichotomyResult(DichotomyResultEnum.FIND_NOTHING, null, startIndex);
         int mid = (startIndex + endIndex) / 2;
         TreeNode childNode = childNodes.get(mid);
@@ -205,16 +222,20 @@ public class FileTree implements TreeHandler, Iterable<TreeNode> {
         else if (childNode.getHash() > hash)
             return dichotomy(isFile, nodeName, hash, childNodes, startIndex, mid - 1);
         else {
+            // Hash the same, traverse the linked list.
             for (; ; childNode = childNode.getNextNode()) {
                 if (childNode.getNodeName().equals(nodeName)) {
                     if (isFile) {
                         if (childNode instanceof FileNode)
+                            // Find the file node.
                             return new DichotomyResult(DichotomyResultEnum.FIND_HASH_NAME, childNode, mid);
                     } else {
                         if (childNode instanceof DirNode)
+                            // Find the directory node.
                             return new DichotomyResult(DichotomyResultEnum.FIND_HASH_NAME, childNode, mid);
                     }
                 }
+                // If no node is found, the hash found is returned.
                 if (childNode.getNextNode() == null)
                     return new DichotomyResult(DichotomyResultEnum.FIND_HASH, childNode, 0);
             }
@@ -222,36 +243,66 @@ public class FileTree implements TreeHandler, Iterable<TreeNode> {
     }
 
     @Override
-    public void syncSerialize() {
+    public void singleSerialize(DataOutputStream dataOutputStream) throws IOException {
         TreeNode treeNode = rootDirNode;
-        syncSerializeNode(treeNode);
+        singleSerializeNode(treeNode, dataOutputStream);
     }
 
-    private void syncSerializeNode(TreeNode treeNode) {
+    private void singleSerializeNode(TreeNode treeNode, DataOutputStream dataOutputStream) throws IOException {
         if (treeNode instanceof DirNode) {
+            // Directory node.
             List<TreeNode> treeNodeList = ((DirNode) treeNode).getChildNodeList();
             if (treeNodeList == null || treeNodeList.size() == 0) {
-                // TODO
+                // Serialized empty directory.
+                treeNode.serialize(dataOutputStream);
             } else {
                 synchronized (treeNodeList) {
+                    // Copy directory.
                     treeNodeList = new ArrayList<>(treeNodeList);
                 }
                 for (TreeNode node : treeNodeList) {
-                    syncSerializeNode(node);
+                    singleSerializeNode(node, dataOutputStream);
                 }
             }
         } else {
-            // TODO
+            //  Serialization file node.
+            treeNode.serialize(dataOutputStream);
         }
         TreeNode nextNode = treeNode.getNextNode();
         if (nextNode != null) {
-            syncSerializeNode(treeNode);
+            // There's the next node.
+            singleSerializeNode(treeNode, dataOutputStream);
+        }
+    }
+
+    /**
+     * Snapshot serialization in a cluster scenario.
+     * During serialization, the file tree stops operating,
+     * and the final serialized image is accurate.
+     */
+    @Override
+    public void clusterSerialize(DataOutputStream dataOutputStream) throws IOException {
+        Iterator<TreeNode> iterator = iterator();
+        while (iterator.hasNext()) {
+            TreeNode treeNode = iterator.next();
+            treeNode.serialize(dataOutputStream);
         }
     }
 
     @Override
-    public void asyncSerialize() {
-        Iterator<TreeNode> iterator = iterator();
+    public void deserialize(DataInputStream dataInputStream) throws IOException {
+        while (dataInputStream.available() != 0) {
+            int i = dataInputStream.readByte();
+            int num = dataInputStream.readInt();
+            byte[] bytes = new byte[num];
+            dataInputStream.read(bytes);
+            String path = new String(bytes, "utf-8");
+            if (i == 0) {
+                createFileOrDirNode(new DirNode(path));
+            } else {
+                createFileOrDirNode(new FileNode(path));
+            }
+        }
     }
 
     @Override
@@ -259,6 +310,9 @@ public class FileTree implements TreeHandler, Iterable<TreeNode> {
         return new Itr();
     }
 
+    /**
+     * TreeNode iterator
+     */
     private class Itr implements Iterator<TreeNode> {
 
         private TreeNode currentNode;
@@ -285,22 +339,32 @@ public class FileTree implements TreeHandler, Iterable<TreeNode> {
             return treeNode;
         }
 
+        /**
+         * Find the next node in the preorder traversal
+         *
+         * @return
+         */
         private void nextNode() {
             for (; ; ) {
+                // Determine if it is the root node.
                 if (currentNode.getDir().equals("/")) {
                     currentNode = null;
                     break;
                 }
+                // If I have the next node.
                 TreeNode nextTreeNode = currentNode.getNextNode();
                 if (nextTreeNode != null) {
                     currentNode = nextTreeNode;
                     getNextNode();
                     break;
                 } else {
+                    // If there is no next node, the brother node is found.
                     int index = currentNode.getIndex();
                     TreeNode parentTreeNode = currentNode.getParentNode();
                     List<TreeNode> childNodeList = ((DirNode) parentTreeNode).getChildNodeList();
                     if (childNodeList.size() == index + 1) {
+                        // The last node.
+                        // Begin looking for the next node of the parent node.
                         currentNode = parentTreeNode;
                     } else {
                         currentNode = childNodeList.get(index + 1);
@@ -324,6 +388,9 @@ public class FileTree implements TreeHandler, Iterable<TreeNode> {
             }
         }
 
+        /**
+         * Find the first node traversed in the preceding order of the current node root.
+         */
         private void firstNode() {
             for (List<TreeNode> treeNodeList = ((DirNode) currentNode).getChildNodeList();
                  treeNodeList != null && treeNodeList.size() != 0;
@@ -336,5 +403,4 @@ public class FileTree implements TreeHandler, Iterable<TreeNode> {
             }
         }
     }
-
 }

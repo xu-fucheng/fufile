@@ -13,11 +13,15 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package cn.fufile;
+package cn.fufile.persistence;
 
-public class FufileNameServer {
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 
-    public static void main(String[] args) {
+public interface Serialize {
 
-    }
+    void serialize(DataOutputStream dataOutputStream) throws IOException;
+
+    void deserialize(DataInputStream dataInputStream) throws IOException;
 }

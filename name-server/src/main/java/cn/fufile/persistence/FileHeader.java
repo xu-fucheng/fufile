@@ -13,45 +13,51 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package cn.fufile.tree;
+package cn.fufile.persistence;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.util.List;
 
-/**
- * Directory node.
- */
-public class DirNode extends TreeNode{
+public class FileHeader implements Serialize{
 
-    private List<TreeNode> childNodeList;
+    private int magic;
 
-    public DirNode(String nodeName, String dir, TreeNode parentNode) {
-        super(nodeName, dir, parentNode);
+    private int version;
+
+    public FileHeader() {
     }
 
-    public DirNode(String dir) {
-        super(dir.substring(dir.lastIndexOf("/") + 1), dir);
+    public FileHeader(int magic, int version) {
+        this.magic = magic;
+        this.version = version;
     }
 
     @Override
     public void serialize(DataOutputStream dataOutputStream) throws IOException {
-        dataOutputStream.writeByte(0);
-        super.serialize(dataOutputStream);
+        dataOutputStream.writeInt(magic);
+        dataOutputStream.writeInt(version);
     }
 
     @Override
-    public void deserialize(DataInputStream dataInputStream) {
-
-        super.deserialize(dataInputStream);
+    public void deserialize(DataInputStream dataInputStream) throws IOException {
+        magic = dataInputStream.readInt();
+        version = dataInputStream.readInt();
     }
 
-    public List<TreeNode> getChildNodeList() {
-        return childNodeList;
+    public int getMagic() {
+        return magic;
     }
 
-    public void setChildNodeList(List<TreeNode> childNodeList) {
-        this.childNodeList = childNodeList;
+    public void setMagic(int magic) {
+        this.magic = magic;
+    }
+
+    public int getVersion() {
+        return version;
+    }
+
+    public void setVersion(int version) {
+        this.version = version;
     }
 }
