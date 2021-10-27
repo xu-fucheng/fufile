@@ -15,21 +15,19 @@
  */
 package cn.fufile.network;
 
-import javax.net.ssl.SSLSocket;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 /**
  * A simple test server.
  */
 public class SimpleServer extends Thread {
-    public final int port;
+    private final int port;
     private final ServerSocket serverSocket;
     private final List<Thread> threads;
     private final List<Socket> sockets;
@@ -38,17 +36,22 @@ public class SimpleServer extends Thread {
     public SimpleServer() throws Exception {
         this.serverSocket = new ServerSocket(0);
         this.port = this.serverSocket.getLocalPort();
-        this.threads = Collections.synchronizedList(new ArrayList<>());
-        this.sockets = Collections.synchronizedList(new ArrayList<>());
+        this.threads = new ArrayList<>();
+        this.sockets = new ArrayList<>();
     }
 
     @Override
     public void run() {
         try {
             while (!isClosing) {
-                final Socket socket = serverSocket.accept();
+                Socket socket = serverSocket.accept();
                 synchronized (sockets) {
                     if (isClosing) {
+                        try {
+                            socket.close();
+                        } catch (IOException e) {
+                            // ignore
+                        }
                         break;
                     }
                     sockets.add(socket);
@@ -65,12 +68,12 @@ public class SimpleServer extends Thread {
                                 output.flush();
                             }
                         } catch (IOException e) {
-
+                            // ignore
                         } finally {
                             try {
                                 socket.close();
                             } catch (IOException e) {
-
+                                // ignore
                             }
                         }
                     });
@@ -79,21 +82,21 @@ public class SimpleServer extends Thread {
                 }
             }
         } catch (IOException e) {
-
+            // ignore
         }
     }
 
-    public void closeConnections() throws IOException {
-        synchronized (sockets) {
-            for (Socket socket : sockets)
-                socket.close();
-        }
+    public int getPort() {
+        return port;
     }
 
     public void close() throws IOException, InterruptedException {
         isClosing = true;
-        this.serverSocket.close();
-        closeConnections();
+        serverSocket.close();
+        synchronized (sockets) {
+            for (Socket socket : sockets)
+                socket.close();
+        }
         for (Thread t : threads)
             t.join();
         join();

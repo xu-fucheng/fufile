@@ -15,5 +15,37 @@
  */
 package cn.fufile.network;
 
-public class FufileChannel {
+import java.io.IOException;
+import java.nio.channels.SelectableChannel;
+import java.nio.channels.SelectionKey;
+
+/**
+ *
+ */
+public abstract class FufileChannel {
+
+    private final String channelId;
+    private final SelectionKey selectionKey;
+    protected final SelectableChannel socketChannel;
+    protected final FufileSelector fufileSelector;
+
+    public FufileChannel(FufileSelector fufileSelector, String channelId, SelectionKey selectionKey, SelectableChannel socketChannel) {
+        this.fufileSelector = fufileSelector;
+        this.channelId = channelId;
+        this.selectionKey = selectionKey;
+        this.socketChannel = socketChannel;
+    }
+
+    public String getChannelId() {
+        return channelId;
+    }
+
+    public void addInterestOps(int ops) {
+        selectionKey.interestOps(selectionKey.interestOps() | ops);
+    }
+
+    public void close() throws IOException {
+        selectionKey.cancel();
+        socketChannel.close();
+    }
 }

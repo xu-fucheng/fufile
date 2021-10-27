@@ -15,110 +15,74 @@
  */
 package cn.fufile.network;
 
+import cn.fufile.errors.FufileException;
+
 import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
-import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
-import java.nio.charset.Charset;
-import java.util.Iterator;
-import java.util.Set;
+import java.util.*;
 
-public class FufileSelector {
+/**
+ * Use JDK selector to poll and handle network I/O events.
+ */
+public abstract class FufileSelector implements Runnable, AutoCloseable {
 
-    private final Selector selector;
+    protected final Selector selector;
 
-    /**
-     * Create a new nioSelector.
-     * @param selector
-     */
-    public FufileSelector(Selector selector) {
-            this.selector = selector;
+    public FufileSelector() {
+        try {
+            this.selector = Selector.open();
+        } catch (IOException e) {
+            throw new FufileException(e);
+        }
     }
 
-    /**
-     * Begin connecting to the given address.
-     * @param address The address to connect to
-     * @throws IOException If an I/O error occurs
-     */
-    public void connect(InetSocketAddress address) throws IOException {
-        SocketChannel socketChannel = SocketChannel.open();
+    public void pool() throws IOException {
+        selector.select();
+        Set<SelectionKey> selectionKeys = selector.selectedKeys();
+        pollSelectionKeys(selectionKeys);
+    }
+
+    @Override
+    public void close() {
+        try {
+            closeChannels();
+            this.selector.close();
+        } catch (IOException e) {
+
+        }
+    }
+
+    protected abstract void closeChannels() throws IOException;
+
+    protected void configureSocket(SocketChannel socketChannel) throws IOException {
         socketChannel.configureBlocking(false);
         socketChannel.socket().setKeepAlive(true);
         socketChannel.socket().setTcpNoDelay(true);
-        boolean connected = socketChannel.connect(address);
-        if (!connected) {
-            SelectionKey key = socketChannel.register(selector, SelectionKey.OP_CONNECT);
-            key.attach(socketChannel);
-        }else {
-            socketChannel.finishConnect();
-            socketChannel.register(selector, SelectionKey.OP_WRITE);
-        }
+    }
+
+    protected void configureSocketForTest(SocketChannel socketChannel) throws IOException {
     }
 
     /**
-     * Create a server socket to listen for connections on.
-     * @param address The address to bind
-     * @throws IOException If an I/O error occurs
+     * 将取出的事件交给子类处理
+     * @param selectionKeys
+     * @throws IOException
      */
-    public void bind(InetSocketAddress address) throws IOException {
-        ServerSocketChannel serverSocketChannel = ServerSocketChannel.open();
-        serverSocketChannel.configureBlocking(false);
-        serverSocketChannel.socket().bind(address);
-        serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
-    }
-
-    /**
-     * Polling and handling IO events.
-     * @throws IOException If an I/O error occurs
-     */
-    public void pool() throws IOException {
-        selector.select(1000);
-        Set<SelectionKey> selectionKeys = selector.selectedKeys();
-        Iterator<SelectionKey> selectionKeyIterator = selectionKeys.iterator();
-        while (selectionKeyIterator.hasNext()) {
-            SelectionKey selectionKey = selectionKeyIterator.next();
-            if (selectionKey.isAcceptable()) {
-                ServerSocketChannel serverSocketChannel = (ServerSocketChannel)selectionKey.channel();
-                SocketChannel socketChannel = serverSocketChannel.accept();
-                socketChannel.configureBlocking(false);
-                socketChannel.socket().setKeepAlive(true);
-                socketChannel.socket().setTcpNoDelay(true);
-                socketChannel.register(selector, SelectionKey.OP_READ);
-                System.out.println("accept");
+    private void pollSelectionKeys(Set<SelectionKey> selectionKeys) throws IOException {
+        for (SelectionKey key : selectionKeys) {
+            try {
+                pollSelectionKey(key);
+            } catch (IOException e) {
+                // read -1: Because opposite terminal close the channel, so we close the channel.
+                // rst: Because opposite terminal close the jvm, so we close the channel.
+                ((FufileChannel) key.attachment()).close();
             }
-
-            if(selectionKey.isReadable()) {
-                SocketChannel socketChannel = (SocketChannel)selectionKey.channel();
-                ByteBuffer byteBuffer = ByteBuffer.allocate(64);
-                int bytesReadSize = socketChannel.read(byteBuffer);
-                System.out.println(bytesReadSize);
-                System.out.println(new String(byteBuffer.array(), 0, bytesReadSize));
-                socketChannel.register(selector, SelectionKey.OP_WRITE);
-                System.out.println("read");
-            }
-
-            if (selectionKey.isWritable()) {
-                SocketChannel socketChannel = (SocketChannel)selectionKey.channel();
-                ByteBuffer byteBuffer = ByteBuffer.allocate(64);
-                byteBuffer.put("Hello Filepigger !".getBytes(Charset.forName("utf-8")));
-                byteBuffer.flip();
-                socketChannel.write(byteBuffer);
-                selectionKey.interestOps(selectionKey.interestOps() & ~SelectionKey.OP_WRITE);
-                System.out.println("write");
-            }
-
-            if (selectionKey.isConnectable()) {
-                SocketChannel socketChannel = (SocketChannel)selectionKey.channel();
-                socketChannel.finishConnect();
-                selectionKey.interestOps(SelectionKey.OP_WRITE | SelectionKey.OP_READ);
-                System.out.println("connect");
-            }
-
-            selectionKeyIterator.remove();
         }
+        selectionKeys.clear();
     }
+
+    protected abstract void pollSelectionKey(SelectionKey key) throws IOException;
 
 }

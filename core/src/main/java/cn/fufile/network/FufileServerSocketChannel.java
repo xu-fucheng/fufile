@@ -13,11 +13,18 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package cn.fufile.utils;
+package cn.fufile.network;
 
-public class FufileThread extends Thread {
+import java.nio.channels.SelectableChannel;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.ServerSocketChannel;
 
-    public FufileThread(Runnable target) {
-        super(target);
+public class FufileServerSocketChannel extends FufileChannel {
+
+    public FufileServerSocketChannel(FufileSelector fufileSelector, String channelId, SelectionKey selectionKey, SelectableChannel socketChannel) {
+        super(fufileSelector, channelId, selectionKey, socketChannel);
     }
+
+
+
 }

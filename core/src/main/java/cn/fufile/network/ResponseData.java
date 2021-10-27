@@ -13,7 +13,13 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package cn.fufile.server;
+package cn.fufile.network;
 
-public class ReceiveEventLoop {
+/**
+ * Response
+ */
+public class ResponseData extends NetData {
+    public ResponseData(String data) {
+        super(data);
+    }
 }

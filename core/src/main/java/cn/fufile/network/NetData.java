@@ -13,11 +13,13 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package cn.fufile.utils;
+package cn.fufile.network;
 
-public class FufileThread extends Thread {
+public abstract class NetData {
 
-    public FufileThread(Runnable target) {
-        super(target);
+    protected final String data;
+
+    public NetData(String data) {
+        this.data = data;
     }
 }

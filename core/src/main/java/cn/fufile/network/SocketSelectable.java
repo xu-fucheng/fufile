@@ -13,7 +13,11 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package cn.fufile.response;
+package cn.fufile.network;
 
-public class Response {
+public interface SocketSelectable {
+
+
+
+
 }

@@ -24,11 +24,11 @@ import java.nio.channels.Selector;
 public class UploadFile {
 
     public static void main(String[] args) throws IOException {
-        FufileSelector selector = new FufileSelector(Selector.open());
-        selector.connect(new InetSocketAddress("localhost", 9000));
-        while (true){
-            selector.pool();
-        }
+//        FufileSelector selector = new FufileSelector(Selector.open());
+//        selector.connect(new InetSocketAddress("localhost", 9000));
+//        while (true){
+//            selector.pool();
+//        }
 
 //        Properties properties = new Properties();
 //        properties.setProperty("server", "localhost:9000");
