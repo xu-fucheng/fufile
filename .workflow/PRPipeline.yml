@@ -1,0 +1,31 @@
+version: '1.0'
+name: pr-pipeline
+displayName: PRPipeline
+stages:
+  - stage: 
+    name: compile
+    displayName: 编译
+    steps:
+      - step: build@maven
+        name: build_maven
+        displayName: Maven 构建
+        jdkVersion: '8'
+        mavenVersion: 3.6.3
+        artifacts:
+          - name: pipeline_temp_artifact
+            path:
+              - ./target
+        commands:
+          - mvn -B clean package -Dmaven.test.skip=true -Dautoconfig.skip
+      - step: publish@general_artifacts
+        name: publish_general_artifacts
+        displayName: 上传到通用制品库
+        dependArtifact: pipeline_temp_artifact
+        artifactRepository: default
+        artifactName: pipeline_artifact
+        dependsOn: build_maven
+triggers:
+  pr:
+    branches:
+      include:
+        - master
