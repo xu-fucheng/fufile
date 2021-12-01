@@ -24,7 +24,6 @@ import java.util.List;
 
 /**
  * channel接收到的事件要在channel自己的类中处理。
- * channel是否需要FufileSelector呢
  */
 public class FufileServer implements Runnable {
 

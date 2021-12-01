@@ -13,27 +13,28 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package cn.fufile.network;
 
-import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.nio.ByteBuffer;
-import java.util.Collection;
-import java.util.Map;
+package cn.fufile.transfer;
 
-public interface SocketSelectable extends Selectable {
+/**
+ * 创建目录的一些字段
+ */
+public class CreateDirMessage extends FufileMessage {
 
-    void connect(String channelId, InetSocketAddress address) throws IOException;
+    public static RequestMessage createRequestMessage() {
+        return new CreateDirRequestMessage();
+    }
 
-    void doPool() throws IOException;
+    public static ResponseMessage createResponseMessage() {
+        return new CreateDirResponseMessage();
+    }
 
-    void toRead() throws IOException;
+    public static class CreateDirRequestMessage extends RequestMessage {
 
-    void send(Sender sender) throws IOException;
 
-    int connectedChannelsSize();
+    }
 
-    void getSends();
+    public static class CreateDirResponseMessage extends ResponseMessage {
 
-    Collection<FufileSocketChannel> getReceive();
+    }
 }

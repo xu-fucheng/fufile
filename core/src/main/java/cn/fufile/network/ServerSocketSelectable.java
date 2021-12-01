@@ -15,9 +15,12 @@
  */
 package cn.fufile.network;
 
-public interface ServerSocketSelectable {
+import java.io.IOException;
+import java.net.InetSocketAddress;
 
+public interface ServerSocketSelectable extends Selectable {
 
+    void bind(InetSocketAddress address) throws IOException;
 
 
 }

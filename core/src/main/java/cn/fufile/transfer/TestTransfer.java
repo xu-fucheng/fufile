@@ -13,14 +13,27 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package cn.fufile.network;
 
-/**
- * Request
- */
-public class RequestData extends NetData {
+package cn.fufile.transfer;
 
-    public RequestData(String data) {
-        super(data);
+import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
+
+public class TestTransfer implements FufileTransfer {
+
+    private final String message;
+
+    public TestTransfer(String message) {
+        this.message = message;
+    }
+
+    @Override
+    public ByteBuffer getPayLoad() {
+        byte[] bytes = message.getBytes(Charset.forName("utf-8"));
+        ByteBuffer byteBuffer = ByteBuffer.allocate(bytes.length + 4);
+        byteBuffer.putInt(bytes.length);
+        byteBuffer.put(bytes);
+        byteBuffer.flip();
+        return byteBuffer;
     }
 }

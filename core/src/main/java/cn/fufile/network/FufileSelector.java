@@ -26,7 +26,7 @@ import java.util.*;
 /**
  * Use JDK selector to poll and handle network I/O events.
  */
-public abstract class FufileSelector implements Runnable, AutoCloseable {
+public abstract class FufileSelector {
 
     protected final Selector selector;
 
@@ -44,17 +44,13 @@ public abstract class FufileSelector implements Runnable, AutoCloseable {
         pollSelectionKeys(selectionKeys);
     }
 
-    @Override
-    public void close() {
+    public void closeSelector() {
         try {
-            closeChannels();
             this.selector.close();
         } catch (IOException e) {
 
         }
     }
-
-    protected abstract void closeChannels() throws IOException;
 
     protected void configureSocket(SocketChannel socketChannel) throws IOException {
         socketChannel.configureBlocking(false);
@@ -67,6 +63,7 @@ public abstract class FufileSelector implements Runnable, AutoCloseable {
 
     /**
      * 将取出的事件交给子类处理
+     *
      * @param selectionKeys
      * @throws IOException
      */

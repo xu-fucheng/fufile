@@ -23,6 +23,11 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 
+/**
+ * SocketSelector外面包一层
+ * ServerSocketSelector外面也包一层
+ * 将SocketSelector和ServerSocketSelector解耦
+ */
 public class ServerSocketSelector extends FufileSelector implements ServerSocketSelectable {
 
     private SocketSelector[] socketSelectors;
@@ -36,31 +41,29 @@ public class ServerSocketSelector extends FufileSelector implements ServerSocket
     public ServerSocketSelector() {
         super();
         socketSelectors = new SocketSelector[SOCKET_PROCESS_THREAD_NUM];
-        for (SocketSelector socketSelector : socketSelectors) {
-            new FufileThread(socketSelector).start();
-        }
-    }
-
-    @Override
-    public void run() {
-        for (; ; ) {
-
-        }
+//        for (SocketSelector socketSelector : socketSelectors) {
+//            new FufileThread(socketSelector).start();
+//        }
     }
 
     @Override
     protected void pollSelectionKey(SelectionKey key) throws IOException {
         if (key.isAcceptable()) {
             ServerSocketChannel serverSocketChannel = (ServerSocketChannel) key.channel();
-            SocketChannel socketChannel = serverSocketChannel.accept();
-            socketChannel.configureBlocking(false);
-            socketChannel.socket().setKeepAlive(true);
-            socketChannel.socket().setTcpNoDelay(true);
-            SocketSelector socketSelector = socketSelectors[(index == Integer.MAX_VALUE ? 0 : index + 1)/ socketSelectors.length];
-            FufileChannel c = new FufileSocketChannel(this, socketChannel.getRemoteAddress().toString(), key, socketChannel);
+            SocketChannel socketChannel = null;
+//            do {
+                socketChannel = serverSocketChannel.accept();
+                socketChannel.configureBlocking(false);
+                socketChannel.socket().setKeepAlive(true);
+                socketChannel.socket().setTcpNoDelay(true);
+                SocketSelector socketSelector = socketSelectors[(index == Integer.MAX_VALUE ? 0 : index + 1) / socketSelectors.length];
+                FufileChannel c = new FufileSocketChannel(this, socketChannel.getRemoteAddress().toString(), key, socketChannel);
+                socketSelector.register(c);
+//            } while (socketChannel != null);
         }
     }
 
+    @Override
     public void bind(InetSocketAddress address) throws IOException {
         ServerSocketChannel serverSocketChannel = ServerSocketChannel.open();
         serverSocketChannel.configureBlocking(false);
@@ -69,7 +72,12 @@ public class ServerSocketSelector extends FufileSelector implements ServerSocket
     }
 
     @Override
-    protected void closeChannels() {
+    public void close() throws Exception {
 
+    }
+
+    @Override
+    public void doPool() throws IOException {
+        pool();
     }
 }

@@ -13,27 +13,16 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package cn.fufile.network;
 
-import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.nio.ByteBuffer;
-import java.util.Collection;
-import java.util.Map;
+package cn.fufile.transfer;
 
-public interface SocketSelectable extends Selectable {
+/**
+ * 一个api的message包含一个request的message和一个response的message
+ *
+ */
+public abstract class FufileMessage {
 
-    void connect(String channelId, InetSocketAddress address) throws IOException;
-
-    void doPool() throws IOException;
-
-    void toRead() throws IOException;
-
-    void send(Sender sender) throws IOException;
-
-    int connectedChannelsSize();
-
-    void getSends();
-
-    Collection<FufileSocketChannel> getReceive();
+//    public interface RequestMessage{}
+//
+//    public interface ResponseMessage{}
 }

@@ -13,13 +13,8 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package cn.fufile.network;
 
-/**
- * Response
- */
-public class ResponseData extends NetData {
-    public ResponseData(String data) {
-        super(data);
-    }
+package cn.fufile.transfer;
+
+public abstract class FufileRequest implements FufileTransfer {
 }

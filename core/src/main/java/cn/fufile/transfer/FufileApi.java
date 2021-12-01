@@ -13,13 +13,12 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package cn.fufile.network;
 
-public abstract class NetData {
+package cn.fufile.transfer;
 
-    protected final String data;
+import cn.fufile.api.ApiNames;
 
-    public NetData(String data) {
-        this.data = data;
-    }
+public abstract class FufileApi {
+    private ApiNames apiNames;
+
 }

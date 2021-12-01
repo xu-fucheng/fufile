@@ -31,8 +31,10 @@ import java.nio.channels.*;
 public class FufileSocketChannel extends FufileChannel {
 
     private final ByteBuffer size;
-    private ByteBuffer requestBuffer;
+    private ByteBuffer payload;
     private final ReceivedDataHandler receivedDataHandler;
+    private Sender sender;
+    private Receiver receiver;
 
     public FufileSocketChannel(FufileSelector fufileSelector, String channelId, SelectionKey selectionKey, SelectableChannel socketChannel) {
         super(fufileSelector, channelId, selectionKey, socketChannel);
@@ -45,9 +47,10 @@ public class FufileSocketChannel extends FufileChannel {
      * 1.size has remaining && requestBuffer has remaining.
      * 2.size read full && requestBuffer has remaining.
      * 3.size read full && requestBuffer read full.
+     *
      * @throws IOException
      */
-    public void read() throws IOException {
+    public boolean read() throws IOException {
         if (size.hasRemaining()) {
             int readSize = ((SocketChannel) socketChannel).read(size);
             if (readSize < 0) {
@@ -61,12 +64,17 @@ public class FufileSocketChannel extends FufileChannel {
                 if (singleRequestSize < 0) {
                     throw new IllegalNetDataException("Illegal net data, size = " + singleRequestSize + ".");
                 }
-                requestBuffer = ByteBuffer.allocate(singleRequestSize);
-                readRequestBytes();
+                payload = ByteBuffer.allocate(singleRequestSize);
+                return readRequestBytes();
             }
-        }else {
-            readRequestBytes();
+            return false;
+        } else {
+            return readRequestBytes();
         }
+    }
+
+    public void addSender(Sender sender) {
+        this.sender = sender;
     }
 
     public void register(Selector sel, int ops) throws IOException {
@@ -74,19 +82,30 @@ public class FufileSocketChannel extends FufileChannel {
         selectionKey.attach(this);
     }
 
-    private void readRequestBytes() throws IOException {
+    private boolean readRequestBytes() throws IOException {
 //        size.rewind();
-        int readSize = ((SocketChannel) socketChannel).read(requestBuffer);
+        int readSize = ((SocketChannel) socketChannel).read(payload);
         if (readSize < 0) {
             // opposite terminal close the channel
             throw new EOFException();
         }
-        if (!requestBuffer.hasRemaining()) {
+        if (!payload.hasRemaining()) {
             // read full
-            requestBuffer.flip();
-            receivedDataHandler.readBuffer(requestBuffer);
+            payload.flip();
+            receiver = new Receiver(payload);
+            payload = null;
+            size.clear();
+            return true;
+//            receivedDataHandler.readBuffer(payload);
         }
+        return false;
     }
 
+    public void write() throws IOException {
+        ((SocketChannel) socketChannel).write(sender.getPayLoad());
+    }
 
+    public Receiver getReceiver() {
+        return receiver;
+    }
 }

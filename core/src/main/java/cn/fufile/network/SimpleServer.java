@@ -24,7 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * A simple test server.
+ * A simple server that can handle multiple connections simultaneously and return received data.
  */
 public class SimpleServer extends Thread {
     private final int port;
@@ -97,6 +97,7 @@ public class SimpleServer extends Thread {
             for (Socket socket : sockets)
                 socket.close();
         }
+        // Wait for threads to died
         for (Thread t : threads)
             t.join();
         join();

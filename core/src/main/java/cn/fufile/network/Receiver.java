@@ -13,27 +13,27 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package cn.fufile.network;
 
-import java.io.IOException;
-import java.net.InetSocketAddress;
+import cn.fufile.transfer.FufileTransfer;
+
 import java.nio.ByteBuffer;
-import java.util.Collection;
-import java.util.Map;
 
-public interface SocketSelectable extends Selectable {
+public class Receiver {
 
-    void connect(String channelId, InetSocketAddress address) throws IOException;
+    private ByteBuffer payload;
+    private FufileTransfer transfer;
 
-    void doPool() throws IOException;
+    public Receiver(ByteBuffer payload) {
+        this.payload = payload;
+    }
 
-    void toRead() throws IOException;
+    public void parse() {
 
-    void send(Sender sender) throws IOException;
+    }
 
-    int connectedChannelsSize();
-
-    void getSends();
-
-    Collection<FufileSocketChannel> getReceive();
+    public ByteBuffer getPayload() {
+        return payload;
+    }
 }

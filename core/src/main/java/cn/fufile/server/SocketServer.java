@@ -13,27 +13,19 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package cn.fufile.network;
+package cn.fufile.server;
 
-import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.nio.ByteBuffer;
-import java.util.Collection;
-import java.util.Map;
+import cn.fufile.network.SocketSelector;
 
-public interface SocketSelectable extends Selectable {
+/**
+ * @author xufucheng
+ * @since 2021/12/1
+ */
+public class SocketServer {
 
-    void connect(String channelId, InetSocketAddress address) throws IOException;
+    private SocketSelector socketSelector;
 
-    void doPool() throws IOException;
-
-    void toRead() throws IOException;
-
-    void send(Sender sender) throws IOException;
-
-    int connectedChannelsSize();
-
-    void getSends();
-
-    Collection<FufileSocketChannel> getReceive();
+    public SocketServer(SocketSelector socketSelector) {
+        this.socketSelector = socketSelector;
+    }
 }
