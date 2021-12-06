@@ -20,5 +20,5 @@ import java.io.IOException;
 
 public interface Selectable extends AutoCloseable {
 
-    void doPool() throws IOException;
+    void doPool(long timeout) throws IOException;
 }

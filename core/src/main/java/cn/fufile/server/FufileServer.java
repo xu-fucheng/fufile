@@ -15,35 +15,70 @@
  */
 package cn.fufile.server;
 
+import cn.fufile.network.FufileChannel;
 import cn.fufile.network.FufileServerSocketChannel;
+import cn.fufile.network.FufileSocketChannel;
+import cn.fufile.network.ServerSocketSelector;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.nio.channels.ServerSocketChannel;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 /**
  * channel接收到的事件要在channel自己的类中处理。
  */
 public class FufileServer implements Runnable {
 
-    private Thread[] workers;
+    private SocketServer[] socketServers;
+    private static final int SOCKET_PROCESS_THREAD_NUM;
+    private int index;
+    private ServerSocketSelector serverSocketSelector;
 
-    public FufileServer(List<Thread> workers) {
-        int SOCKET_PROCESS_THREAD_NUM = Math.max(1, Runtime.getRuntime().availableProcessors() * 1);
-        this.workers = new Thread[SOCKET_PROCESS_THREAD_NUM];
+    static {
+        SOCKET_PROCESS_THREAD_NUM = Math.max(1, Runtime.getRuntime().availableProcessors() * 2);
+    }
+
+
+    public FufileServer() throws IOException {
+        socketServers = new SocketServer[SOCKET_PROCESS_THREAD_NUM];
+        serverSocketSelector = new ServerSocketSelector(new InetSocketAddress(1111));
     }
 
     @Override
     public void run() {
+        // 处理新connections
+        // 分配新connections
+        for (; ; ) {
 
-        ServerSocketChannel serverSocketChannel = null;
-        try {
-            serverSocketChannel = ServerSocketChannel.open();
-        } catch (IOException e) {
-            e.printStackTrace();
+            try {
+                serverSocketSelector.doPool(500);
+                Iterator<FufileSocketChannel> iterator = serverSocketSelector.getNewConnections().listIterator();
+
+                while (iterator.hasNext()) {
+                    FufileSocketChannel channel = iterator.next();
+                    boolean allocated = false;
+                    for (int i = 0; i < socketServers.length; i++) {
+                        SocketServer socketServer = socketServers[Math.abs(index++) % socketServers.length];
+                        if (socketServer.allocateNewConnections(channel)) {
+                            iterator.remove();
+                            allocated = true;
+                            break;
+                        }
+                    }
+                    if (!allocated) {
+                        break;
+                    }
+                }
+
+            }catch (Exception e){
+
+            }
+
         }
-//        FufileServerSocketChannel fufileServerSocketChannel = new FufileServerSocketChannel(, serverSocketChannel);
 
     }
 }

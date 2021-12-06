@@ -15,12 +15,8 @@
  */
 package cn.fufile.network;
 
-import cn.fufile.transfer.FufileRequest;
-import cn.fufile.transfer.FufileResponse;
-
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 import java.util.*;
@@ -30,16 +26,14 @@ public class SocketSelector extends FufileSelector implements SocketSelectable {
 
     private final Map<String, FufileSocketChannel> connectedChannels;
     private final LinkedHashMap<String, FufileSocketChannel> receivedChannels;
-    private final Map<String, FufileRequest> receivedRequestData;
-    private final Map<String, FufileResponse> receivedResponseData;
-    private Queue<FufileChannel> newConnections = new ArrayBlockingQueue(32);
+    private final Queue<FufileSocketChannel> newConnections;
+    private final int connectionQueueSize = 16;
 
     public SocketSelector() {
         super();
         connectedChannels = new HashMap<>();
-        receivedRequestData = new HashMap<>();
-        receivedResponseData = new HashMap<>();
         receivedChannels = new LinkedHashMap<>();
+        newConnections = new ArrayBlockingQueue(connectionQueueSize);
     }
 
     @Override
@@ -51,12 +45,12 @@ public class SocketSelector extends FufileSelector implements SocketSelectable {
             connected = socketChannel.connect(address);
             if (!connected) {
                 SelectionKey key = socketChannel.register(selector, SelectionKey.OP_CONNECT);
-                key.attach(new FufileSocketChannel(this, channelId, key, socketChannel));
+                key.attach(new FufileSocketChannel(channelId, key, socketChannel));
             } else {
                 if (socketChannel.isConnected() && socketChannel.finishConnect()) {
                     configureSocketForTest(socketChannel);
                     SelectionKey key = socketChannel.register(selector, SelectionKey.OP_READ);
-                    FufileSocketChannel channel = new FufileSocketChannel(this, channelId, key, socketChannel);
+                    FufileSocketChannel channel = new FufileSocketChannel(channelId, key, socketChannel);
                     key.attach(channel);
                     connectedChannels.put(channelId, channel);
                 } else {
@@ -80,53 +74,47 @@ public class SocketSelector extends FufileSelector implements SocketSelectable {
     @Override
     public void send(Sender sender) {
         // 先连接再发送数据，应该判断是否连接
-        FufileSocketChannel socketChannel = (FufileSocketChannel)connectedChannels.get(sender.getChannelId());
+        FufileSocketChannel socketChannel = connectedChannels.get(sender.getChannelId());
         socketChannel.addSender(sender);
         socketChannel.addInterestOps(SelectionKey.OP_WRITE);
     }
 
     @Override
-    public void doPool() throws IOException {
-        pool();
+    public void doPool(long timeout) throws IOException {
+        pool(timeout);
     }
 
-    @Override
-    public void toRead() throws IOException {
-
+    public boolean allocateNewConnections(FufileSocketChannel channel) throws IOException {
+        return newConnections.offer(channel);
     }
 
-    public void register(FufileChannel channel) throws IOException {
-        newConnections.offer(channel);
-    }
+    public void registerNewConnections() {
+        int connectionsRegistered = 0;
+        while (connectionsRegistered < connectionQueueSize && !newConnections.isEmpty()) {
+            FufileSocketChannel channel = newConnections.poll();
+            if (channel.isRegistered()) {
+                channel.completeConnection();
+            } else {
 
-    private void registerNewConnections() throws IOException {
-        while (!newConnections.isEmpty()) {
-            FufileSocketChannel channel = (FufileSocketChannel)newConnections.poll();
-            channel.register(selector, SelectionKey.OP_READ);
+            }
+            connectedChannels.put(channel.getChannelId(), channel);
         }
-    }
-
-    public void handleNewConnections() {
-
     }
 
     @Override
     protected void pollSelectionKey(SelectionKey key) throws IOException {
         FufileSocketChannel channel = (FufileSocketChannel) key.attachment();
-
         if (key.isConnectable()) {
-            SocketChannel socketChannel = (SocketChannel) key.channel();
-            if (socketChannel.finishConnect()) {
-                key.interestOps(key.interestOps() & ~SelectionKey.OP_CONNECT | SelectionKey.OP_READ);
-                connectedChannels.put(channel.getChannelId(), channel);
+            if (newConnections.size() < connectionQueueSize) {
+                if (channel.finishConnect()) {
+                    newConnections.offer(channel);
+                }
             }
         }
-
         if (key.isWritable()) {
             channel.write();
             key.interestOps(key.interestOps() & ~SelectionKey.OP_WRITE);
         }
-
         if (key.isReadable()) {
             FufileSocketChannel fufileSocketChannel = (FufileSocketChannel) key.attachment();
             if (fufileSocketChannel.read()) {
@@ -158,11 +146,4 @@ public class SocketSelector extends FufileSelector implements SocketSelectable {
         return receivedChannels.values();
     }
 
-    protected void receiveRequestData(String channelId, FufileRequest fufileRequest){
-        receivedRequestData.put(channelId, fufileRequest);
-    }
-
-    protected void receiveResponseData(String channelId, FufileResponse fufileResponse) {
-        receivedResponseData.put(channelId, fufileResponse);
-    }
 }

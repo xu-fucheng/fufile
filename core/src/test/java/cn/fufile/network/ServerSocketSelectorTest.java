@@ -32,7 +32,7 @@ public class ServerSocketSelectorTest {
 
     @BeforeEach
     public void setUp() throws Exception {
-        selectable = new ServerSocketSelector();
+        selectable = new ServerSocketSelector(new InetSocketAddress(0));
     }
 
     @AfterEach
@@ -40,10 +40,19 @@ public class ServerSocketSelectorTest {
         selectable.close();
     }
 
+    @Test
+    public void testWholeProcess() throws Exception {
+
+
+
+
+
+
+    }
+
 
     @Test
     public void test1() throws IOException {
-        selectable.bind(new InetSocketAddress(9001));
         for (int i = 0; i < 5; i++) {
             Socket socket = new Socket("localhost", 9001);
         }
@@ -52,6 +61,6 @@ public class ServerSocketSelectorTest {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        selectable.doPool();
+        selectable.doPool(500);
     }
 }

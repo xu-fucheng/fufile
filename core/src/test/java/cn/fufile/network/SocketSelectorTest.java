@@ -15,6 +15,7 @@
  */
 package cn.fufile.network;
 
+import cn.fufile.server.SimpleServer;
 import cn.fufile.transfer.TestTransfer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
@@ -58,7 +59,7 @@ public class SocketSelectorTest {
      */
     @Test
     public void testWholeProcess() throws Exception {
-        int connectionsNumber = 8;
+        int connectionsNumber = 32;
         int sendNumber = 63;
         int[] receiveCount = new int[connectionsNumber];
         InetSocketAddress addr = new InetSocketAddress("localhost", server.getPort());
@@ -66,13 +67,14 @@ public class SocketSelectorTest {
             selectable.connect(Integer.toString(i), addr);
         }
         while (selectable.connectedChannelsSize() != connectionsNumber) {
-            selectable.doPool();
+            selectable.doPool(500);
+            selectable.registerNewConnections();
         }
         for (int i = 0; i < connectionsNumber; i++) {
             selectable.send(new Sender(Integer.toString(i), new TestTransfer("number:0")));
         }
         while (!Arrays.stream(receiveCount).allMatch(count -> count == sendNumber)) {
-            selectable.doPool();
+            selectable.doPool(500);
             Iterator<FufileSocketChannel> iterator = selectable.getReceive().iterator();
             while (iterator.hasNext()) {
                 FufileSocketChannel channel = iterator.next();
@@ -106,7 +108,7 @@ public class SocketSelectorTest {
         Field field = FufileSelector.class.getDeclaredField("connectedChannels");
         field.setAccessible(true);
         Map connectedChannels = (Map) field.get(selectable);
-        selectable.doPool();
+        selectable.doPool(500);
         String channelId = "localhost" + server.getPort();
         Assertions.assertNotNull(connectedChannels.get(channelId));
         byte[] bytes = "Hello Fufile !".getBytes(Charset.forName("utf-8"));
@@ -115,8 +117,8 @@ public class SocketSelectorTest {
         byteBuffer.put(bytes);
         byteBuffer.flip();
 //        selectable.send(channelId, byteBuffer);
-        selectable.doPool();
-        selectable.doPool();
+        selectable.doPool(500);
+        selectable.doPool(500);
     }
 
     @Test
@@ -134,8 +136,8 @@ public class SocketSelectorTest {
         byteBuffer.put(bytes);
         byteBuffer.flip();
 //        blockingConnectionSelector.send(channelId, byteBuffer);
-        blockingConnectionSelector.pool();
-        blockingConnectionSelector.pool();
+        blockingConnectionSelector.pool(500);
+        blockingConnectionSelector.pool(500);
     }
 
     @Test

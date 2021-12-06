@@ -38,8 +38,12 @@ public abstract class FufileSelector {
         }
     }
 
-    public void pool() throws IOException {
-        selector.select();
+    public void pool(long timeout) throws IOException {
+        if (timeout <= 0) {
+            selector.selectNow();
+        } else {
+            selector.select(500);
+        }
         Set<SelectionKey> selectionKeys = selector.selectedKeys();
         pollSelectionKeys(selectionKeys);
     }

@@ -21,8 +21,8 @@ import java.nio.channels.ServerSocketChannel;
 
 public class FufileServerSocketChannel extends FufileChannel {
 
-    public FufileServerSocketChannel(FufileSelector fufileSelector, String channelId, SelectionKey selectionKey, SelectableChannel socketChannel) {
-        super(fufileSelector, channelId, selectionKey, socketChannel);
+    public FufileServerSocketChannel(String channelId, SelectionKey selectionKey, SelectableChannel socketChannel) {
+        super(channelId, selectionKey, socketChannel);
     }
 
 

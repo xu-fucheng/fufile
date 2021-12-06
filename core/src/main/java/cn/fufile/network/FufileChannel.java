@@ -25,12 +25,10 @@ import java.nio.channels.SelectionKey;
 public abstract class FufileChannel {
 
     private final String channelId;
-    private final SelectionKey selectionKey;
+    protected SelectionKey selectionKey;
     protected final SelectableChannel socketChannel;
-    protected final FufileSelector fufileSelector;
 
-    public FufileChannel(FufileSelector fufileSelector, String channelId, SelectionKey selectionKey, SelectableChannel socketChannel) {
-        this.fufileSelector = fufileSelector;
+    public FufileChannel(String channelId, SelectionKey selectionKey, SelectableChannel socketChannel) {
         this.channelId = channelId;
         this.selectionKey = selectionKey;
         this.socketChannel = socketChannel;
@@ -48,4 +46,5 @@ public abstract class FufileChannel {
         selectionKey.cancel();
         socketChannel.close();
     }
+
 }

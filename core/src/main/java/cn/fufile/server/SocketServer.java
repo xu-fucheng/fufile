@@ -15,17 +15,37 @@
  */
 package cn.fufile.server;
 
+import cn.fufile.network.FufileChannel;
+import cn.fufile.network.FufileSocketChannel;
 import cn.fufile.network.SocketSelector;
+
+import java.io.IOException;
 
 /**
  * @author xufucheng
  * @since 2021/12/1
  */
-public class SocketServer {
+public class SocketServer implements Runnable {
 
     private SocketSelector socketSelector;
 
-    public SocketServer(SocketSelector socketSelector) {
-        this.socketSelector = socketSelector;
+    public SocketServer() {
+        this.socketSelector = new SocketSelector();
+
+    }
+
+    public boolean allocateNewConnections(FufileSocketChannel channel) throws IOException {
+        return socketSelector.allocateNewConnections(channel);
+    }
+
+    @Override
+    public void run() {
+        for (; ; ) {
+            try {
+                socketSelector.doPool(500);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 }

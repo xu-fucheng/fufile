@@ -20,7 +20,6 @@ import java.net.InetSocketAddress;
 
 public interface ServerSocketSelectable extends Selectable {
 
-    void bind(InetSocketAddress address) throws IOException;
 
 
 }

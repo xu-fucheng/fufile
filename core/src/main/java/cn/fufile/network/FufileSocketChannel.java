@@ -36,8 +36,8 @@ public class FufileSocketChannel extends FufileChannel {
     private Sender sender;
     private Receiver receiver;
 
-    public FufileSocketChannel(FufileSelector fufileSelector, String channelId, SelectionKey selectionKey, SelectableChannel socketChannel) {
-        super(fufileSelector, channelId, selectionKey, socketChannel);
+    public FufileSocketChannel(String channelId, SelectionKey selectionKey, SelectableChannel socketChannel) {
+        super(channelId, selectionKey, socketChannel);
         size = ByteBuffer.allocate(4);
         receivedDataHandler = new ReceivedDataHandler();
     }
@@ -104,6 +104,19 @@ public class FufileSocketChannel extends FufileChannel {
     public void write() throws IOException {
         ((SocketChannel) socketChannel).write(sender.getPayLoad());
     }
+
+    public boolean finishConnect() throws IOException {
+        return ((SocketChannel) socketChannel).finishConnect();
+    }
+
+    public boolean isRegistered() {
+        return selectionKey != null;
+    }
+
+    public void completeConnection() {
+        selectionKey.interestOps(selectionKey.interestOps() & ~SelectionKey.OP_CONNECT | SelectionKey.OP_READ);
+    }
+
 
     public Receiver getReceiver() {
         return receiver;

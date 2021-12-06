@@ -17,23 +17,21 @@ package cn.fufile.network;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.nio.ByteBuffer;
 import java.util.Collection;
-import java.util.Map;
 
 public interface SocketSelectable extends Selectable {
 
     void connect(String channelId, InetSocketAddress address) throws IOException;
 
-    void doPool() throws IOException;
-
-    void toRead() throws IOException;
+    void doPool(long timeout) throws IOException;
 
     void send(Sender sender) throws IOException;
 
     int connectedChannelsSize();
 
     void getSends();
+
+    void registerNewConnections();
 
     Collection<FufileSocketChannel> getReceive();
 }
