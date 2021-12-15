@@ -102,7 +102,7 @@ public class SocketSelectorTest {
     }
 
 
-    @Test
+//    @Test
     public void testClientConnect() throws Exception {
         selectable.connect("", new InetSocketAddress("localhost", server.getPort()));
         Field field = FufileSelector.class.getDeclaredField("connectedChannels");
@@ -121,7 +121,7 @@ public class SocketSelectorTest {
         selectable.doPool(500);
     }
 
-    @Test
+//    @Test
     public void testClientBlockingConnection() throws Exception {
         BlockingConnectionSelector blockingConnectionSelector = new BlockingConnectionSelector(Selector.open());
         blockingConnectionSelector.connect("", new InetSocketAddress("localhost", server.getPort()));
@@ -138,22 +138,6 @@ public class SocketSelectorTest {
 //        blockingConnectionSelector.send(channelId, byteBuffer);
         blockingConnectionSelector.pool(500);
         blockingConnectionSelector.pool(500);
-    }
-
-    @Test
-    public void test() throws Exception {
-//        selectable.connect(new InetSocketAddress("localhost", 9000));
-//        selectable.doPool();
-//        selectable.toWrite("localhost9000");
-//        byte[] bytes = "Hello".getBytes(Charset.forName("utf-8"));
-//        ByteBuffer byteBuffer = ByteBuffer.allocate(bytes.length + 5);
-//        byteBuffer.putInt(bytes.length + 1);
-//        byteBuffer.put((byte) 0);
-//        byteBuffer.put(bytes);
-//        byteBuffer.flip();
-//        selectable.send("localhost9000", byteBuffer);
-//        selectable.doPool();
-//        Thread.sleep(1000000);
     }
 
 

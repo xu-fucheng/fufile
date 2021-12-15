@@ -30,7 +30,7 @@ class SnapshotTest {
         fileTree = new FileTree();
     }
 
-    @Test
+//    @Test
     public void testClusterSerialize() throws Exception {
         fileTree.createFileOrDirNode(new FileNode("/image/red/red.jpg"));
         fileTree.createFileOrDirNode(new FileNode("/image/black/black.jpg"));
@@ -38,7 +38,7 @@ class SnapshotTest {
         snapshot.createClusterSnapshot();
     }
 
-    @Test
+//    @Test
     public void readSnapshot() throws Exception {
         Snapshot snapshot = new Snapshot("target/dir.snap");
         snapshot.readSnapshot();

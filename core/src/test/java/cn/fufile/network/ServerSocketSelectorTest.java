@@ -50,17 +50,4 @@ public class ServerSocketSelectorTest {
 
     }
 
-
-    @Test
-    public void test1() throws IOException {
-        for (int i = 0; i < 5; i++) {
-            Socket socket = new Socket("localhost", 9001);
-        }
-        try {
-            Thread.sleep(3000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        selectable.doPool(500);
-    }
 }

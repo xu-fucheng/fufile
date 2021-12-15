@@ -36,7 +36,7 @@ class FileTreeTest {
         fileTree = new FileTree();
     }
 
-    @Test
+//    @Test
     public void testAddAndGetFileNode() {
         try {
             fileTree.createFileOrDirNode(new FileNode("/image/red/red.jpg"));
@@ -48,7 +48,7 @@ class FileTreeTest {
         }
     }
 
-    @Test
+//    @Test
     public void testIterateTreeNode() {
         String[] urls = {"/image/red/red.jpg", "/image/black/black.jpg", "/image/blue.jpg"};
         List<String> urlList = new ArrayList<>();
@@ -64,7 +64,7 @@ class FileTreeTest {
         }
     }
 
-    @Test
+//    @Test
     public void testRemoveFileNode() {
         try {
             fileTree.createFileOrDirNode(new FileNode("/image/red/red.jpg"));
