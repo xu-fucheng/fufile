@@ -17,6 +17,7 @@
 package cn.fufile.network;
 
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -29,10 +30,12 @@ import java.nio.channels.SocketChannel;
 public class ServerSocketSelectorTest {
 
     private ServerSocketSelectable selectable;
+    private int port;
 
     @BeforeEach
     public void setUp() throws Exception {
         selectable = new ServerSocketSelector(new InetSocketAddress(0));
+        port = selectable.getServerSocketChannel().socket().getLocalPort();
     }
 
     @AfterEach
@@ -42,9 +45,9 @@ public class ServerSocketSelectorTest {
 
     @Test
     public void testWholeProcess() throws Exception {
-
-
-
+        Socket socket = new Socket("localhost", port);
+        selectable.doPool(500);
+        Assertions.assertEquals(selectable.getNewConnections().size(), 1);
 
 
 

@@ -65,7 +65,7 @@ public class ServerSocketSelector extends FufileSelector implements ServerSocket
 
 
     private void bind(InetSocketAddress address) throws IOException {
-        ServerSocketChannel serverSocketChannel = ServerSocketChannel.open();
+        serverSocketChannel = ServerSocketChannel.open();
         serverSocketChannel.configureBlocking(false);
         serverSocketChannel.socket().bind(address);
         serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
@@ -85,6 +85,7 @@ public class ServerSocketSelector extends FufileSelector implements ServerSocket
         pool(timeout);
     }
 
+    @Override
     public ServerSocketChannel getServerSocketChannel() {
         return serverSocketChannel;
     }
