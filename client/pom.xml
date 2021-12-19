@@ -1,7 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 <!--
   ~ Copyright 2021 The Fufile Project
   ~
@@ -17,7 +14,11 @@
   ~ License for the specific language governing permissions and limitations
   ~ under the License.
   -->
-    <parent>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+<parent>
         <artifactId>fufile-parent</artifactId>
         <groupId>cn.fufile</groupId>
         <version>0.0.1-SNAPSHOT</version>
