@@ -14,9 +14,9 @@
  * under the License.
  */
 
-package cn.fufile.transfer;
+package org.fufile.transfer;
 
-import cn.fufile.transfer.FufileTransfer;
+import org.fufile.transfer.FufileTransfer;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;

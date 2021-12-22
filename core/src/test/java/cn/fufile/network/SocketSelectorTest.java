@@ -13,10 +13,11 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package cn.fufile.network;
+package org.fufile.network;
 
-import cn.fufile.server.SimpleServer;
-import cn.fufile.transfer.TestTransfer;
+import org.fufile.server.SimpleServer;
+import org.fufile.transfer.TestTransfer;
+import org.fufile.network.*;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;

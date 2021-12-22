@@ -20,7 +20,7 @@
 
 <parent>
         <artifactId>fufile-parent</artifactId>
-        <groupId>cn.fufile</groupId>
+        <groupId>org.fufile</groupId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -46,7 +46,7 @@
 <!--                            <arguments>-->
 <!--                                <argument>-classpath</argument>-->
 <!--                                <classpath/>-->
-<!--                                <argument>cn.fufile.generator.ApiMessageGenerator</argument>-->
+<!--                                <argument>org.fufile.generator.ApiMessageGenerator</argument>-->
 <!--                                <argument>-l</argument>-->
 <!--                                <argument>java</argument>-->
 <!--                                <argument>${project.basedir}/src/main/java/cn/fufile/generator/ApiMessageGenerator-->

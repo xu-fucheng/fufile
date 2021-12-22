@@ -13,12 +13,12 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package cn.fufile.persistence;
+package org.fufile.persistence;
 
-import cn.fufile.tree.FileNode;
-import cn.fufile.tree.FileTree;
+import org.fufile.persistence.Snapshot;
+import org.fufile.tree.FileNode;
+import org.fufile.tree.FileTree;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
 class SnapshotTest {
 

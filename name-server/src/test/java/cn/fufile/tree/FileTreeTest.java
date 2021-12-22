@@ -13,11 +13,14 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package cn.fufile.tree;
+package org.fufile.tree;
 
-import cn.fufile.errors.FufileException;
+import org.fufile.errors.FufileException;
+import org.fufile.tree.DirNode;
+import org.fufile.tree.FileNode;
+import org.fufile.tree.FileTree;
+import org.fufile.tree.TreeNode;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.util.ArrayList;

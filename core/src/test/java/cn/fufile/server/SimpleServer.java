@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package cn.fufile.server;
+package org.fufile.server;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;

@@ -14,18 +14,17 @@
  * under the License.
  */
 
-package cn.fufile.network;
+package org.fufile.network;
 
+import org.fufile.network.ServerSocketSelectable;
+import org.fufile.network.ServerSocketSelector;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.nio.channels.Selector;
-import java.nio.channels.SocketChannel;
 
 public class ServerSocketSelectorTest {
 
