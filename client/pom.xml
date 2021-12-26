@@ -18,7 +18,7 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
-<parent>
+    <parent>
         <artifactId>fufile-parent</artifactId>
         <groupId>org.fufile</groupId>
         <version>0.0.1-SNAPSHOT</version>
@@ -26,6 +26,7 @@
     <modelVersion>4.0.0</modelVersion>
     <artifactId>fufile-client</artifactId>
     <packaging>jar</packaging>
+    <name>fufile-client</name>
 
     <dependencies>
         <dependency>
@@ -34,4 +35,5 @@
             <version>${project.version}</version>
         </dependency>
     </dependencies>
+
 </project>

@@ -17,45 +17,49 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
 
-<parent>
+    <parent>
         <artifactId>fufile-parent</artifactId>
         <groupId>org.fufile</groupId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-    <modelVersion>4.0.0</modelVersion>
 
     <artifactId>fufile-generator</artifactId>
 
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>exec-maven-plugin</artifactId>
-                <version>${exec-maven-plugin.version}</version>
-                <executions>
-                    <execution>
-                        <id>generate-message</id>
-                        <phase>generate-sources</phase>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
-<!--                        <configuration>-->
-<!--                            <workingDirectory>${project.build.directory}/generated-sources/java</workingDirectory>-->
-<!--                            <executable>java</executable>-->
-<!--                            <arguments>-->
-<!--                                <argument>-classpath</argument>-->
-<!--                                <classpath/>-->
-<!--                                <argument>org.fufile.generator.ApiMessageGenerator</argument>-->
-<!--                                <argument>-l</argument>-->
-<!--                                <argument>java</argument>-->
-<!--                                <argument>${project.basedir}/src/main/java/cn/fufile/generator/ApiMessageGenerator-->
-<!--                                </argument>-->
-<!--                            </arguments>-->
-<!--                        </configuration>-->
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
+    <properties>
+        <maven.deploy.skip>true</maven.deploy.skip>
+    </properties>
+
+    <!--    <build>-->
+    <!--        <plugins>-->
+    <!--            <plugin>-->
+    <!--                <groupId>org.codehaus.mojo</groupId>-->
+    <!--                <artifactId>exec-maven-plugin</artifactId>-->
+    <!--                <version>${exec-maven-plugin.version}</version>-->
+    <!--                <executions>-->
+    <!--                    <execution>-->
+    <!--                        <id>generate-message</id>-->
+    <!--                        <phase>generate-sources</phase>-->
+    <!--                        <goals>-->
+    <!--                            <goal>exec</goal>-->
+    <!--                        </goals>-->
+    <!--&lt;!&ndash;                        <configuration>&ndash;&gt;-->
+    <!--&lt;!&ndash;                            <workingDirectory>${project.build.directory}/generated-sources/java</workingDirectory>&ndash;&gt;-->
+    <!--&lt;!&ndash;                            <executable>java</executable>&ndash;&gt;-->
+    <!--&lt;!&ndash;                            <arguments>&ndash;&gt;-->
+    <!--&lt;!&ndash;                                <argument>-classpath</argument>&ndash;&gt;-->
+    <!--&lt;!&ndash;                                <classpath/>&ndash;&gt;-->
+    <!--&lt;!&ndash;                                <argument>org.fufile.generator.ApiMessageGenerator</argument>&ndash;&gt;-->
+    <!--&lt;!&ndash;                                <argument>-l</argument>&ndash;&gt;-->
+    <!--&lt;!&ndash;                                <argument>java</argument>&ndash;&gt;-->
+    <!--&lt;!&ndash;                                <argument>${project.basedir}/src/main/java/cn/fufile/generator/ApiMessageGenerator&ndash;&gt;-->
+    <!--&lt;!&ndash;                                </argument>&ndash;&gt;-->
+    <!--&lt;!&ndash;                            </arguments>&ndash;&gt;-->
+    <!--&lt;!&ndash;                        </configuration>&ndash;&gt;-->
+    <!--                    </execution>-->
+    <!--                </executions>-->
+    <!--            </plugin>-->
+    <!--        </plugins>-->
+    <!--    </build>-->
 </project>
