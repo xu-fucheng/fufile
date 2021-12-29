@@ -3,7 +3,7 @@
 ### 简介
 FuFile是面向大规模数据存储的分布式文件系统，设计中借鉴了GFS，并做了一些创新优化。
 ### 链接
-[官方网站](https://fufile.cn/)
+[官方网站](https://fufile.org)
 ### 架构
 ![Fufile Architecture](https://fufile-architecture.oss-cn-beijing.aliyuncs.com/Fufile%20Architecture.jpg)
 ### 功能特点
