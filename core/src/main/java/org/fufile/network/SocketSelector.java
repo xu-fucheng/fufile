@@ -13,13 +13,18 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package org.fufile.network;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
-import java.util.*;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Queue;
+import java.util.Collection;
 import java.util.concurrent.ArrayBlockingQueue;
 
 public class SocketSelector extends FufileSelector implements SocketSelectable {
@@ -95,7 +100,7 @@ public class SocketSelector extends FufileSelector implements SocketSelectable {
             if (channel.isRegistered()) {
                 channel.completeConnection();
             } else {
-
+                //
             }
             connectedChannels.put(channel.getChannelId(), channel);
         }

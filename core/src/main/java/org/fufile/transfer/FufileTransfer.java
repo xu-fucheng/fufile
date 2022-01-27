@@ -19,8 +19,6 @@ package org.fufile.transfer;
 import java.nio.ByteBuffer;
 
 /**
- * @author xufucheng
- * @since 2021/11/24
  */
 public interface FufileTransfer {
 

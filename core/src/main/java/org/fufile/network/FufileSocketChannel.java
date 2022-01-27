@@ -13,6 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package org.fufile.network;
 
 import org.fufile.errors.IllegalNetDataException;
@@ -20,13 +21,17 @@ import org.fufile.errors.IllegalNetDataException;
 import java.io.EOFException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.channels.*;
+import java.nio.channels.SelectableChannel;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
+import java.nio.channels.SocketChannel;
 
 /**
  * Because Java NIO is LT model, this unfinished data will continue to be read after the next {@link FufileSelector#pool}.
  * The I/O thread reads at most one request at a time.
  * If {@link SocketChannel#read(ByteBuffer)} return -1, this may indicate that the peer has closed the channel.
- * If the JVM is shut down on the other end, TCP will receive an RST package and all IO operations on the channel will throw {@link IOException}.
+ * If the JVM is shut down on the other end, TCP will receive an RST package and all IO operations on the channel
+ * will throw {@link IOException}.
  */
 public class FufileSocketChannel extends FufileChannel {
 
@@ -48,7 +53,6 @@ public class FufileSocketChannel extends FufileChannel {
      * 2.size read full && requestBuffer has remaining.
      * 3.size read full && requestBuffer read full.
      *
-     * @throws IOException
      */
     public boolean read() throws IOException {
         if (size.hasRemaining()) {

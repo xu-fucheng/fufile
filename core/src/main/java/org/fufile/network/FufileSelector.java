@@ -13,6 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package org.fufile.network;
 
 import org.fufile.errors.FufileException;
@@ -21,7 +22,7 @@ import java.io.IOException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
-import java.util.*;
+import java.util.Set;
 
 /**
  * Use JDK selector to poll and handle network I/O events.
@@ -68,8 +69,6 @@ public abstract class FufileSelector {
     /**
      * 将取出的事件交给子类处理
      *
-     * @param selectionKeys
-     * @throws IOException
      */
     private void pollSelectionKeys(Set<SelectionKey> selectionKeys) throws IOException {
         for (SelectionKey key : selectionKeys) {

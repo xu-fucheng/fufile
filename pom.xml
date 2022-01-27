@@ -72,8 +72,8 @@
         <log4j2.version>2.13.2</log4j2.version>
         <junit.version>5.7.2</junit.version>
         <mockito.version>3.5.7</mockito.version>
-        <checkstyle.version>8.43</checkstyle.version>
-<!--        maven plugins version-->
+        <checkstyle.version>9.2.1</checkstyle.version>
+        <!--        maven plugins version-->
         <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
         <maven-checkstyle-plugin.version>3.1.2</maven-checkstyle-plugin.version>
         <maven-surefire-plugin.version>2.22.2</maven-surefire-plugin.version>
@@ -142,23 +142,8 @@
                 <artifactId>maven-surefire-plugin</artifactId>
             </plugin>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-checkstyle-plugin</artifactId>
                 <version>${maven-checkstyle-plugin.version}</version>
-                <configuration>
-                    <failOnViolation>false</failOnViolation>
-                    <includeTestSourceDirectory>true</includeTestSourceDirectory>
-                    <sourceDirectories>
-                        <directory>${basedir}/src/main/java</directory>
-                    </sourceDirectories>
-                    <testSourceDirectories>
-                        <directory>${basedir}/src/test/java</directory>
-                    </testSourceDirectories>
-                    <configLocation>checkstyle/checkstyle.xml</configLocation>
-                    <outputFile>${basedir}/target/checkstyle-output.xml</outputFile>
-                    <inputEncoding>${project.build.sourceEncoding}</inputEncoding>
-                    <outputEncoding>${project.build.sourceEncoding}</outputEncoding>
-                </configuration>
                 <dependencies>
                     <dependency>
                         <groupId>com.puppycrawl.tools</groupId>
@@ -166,8 +151,41 @@
                         <version>${checkstyle.version}</version>
                     </dependency>
                 </dependencies>
+                <configuration>
+                    <configLocation>${maven.multiModuleProjectDirectory}/checkstyle/checkStyle.xml</configLocation>
+                    <headerLocation>${maven.multiModuleProjectDirectory}/checkstyle/file.header</headerLocation>
+                    <encoding>${project.build.sourceEncoding}</encoding>
+                    <consoleOutput>true</consoleOutput>
+                    <includeTestSourceDirectory>true</includeTestSourceDirectory>
+                    <failOnViolation>true</failOnViolation>
+                    <sourceDirectories>
+                        <directory>${basedir}/src/main/java</directory>
+                    </sourceDirectories>
+                    <testSourceDirectories>
+                        <directory>${basedir}/src/test/java</directory>
+                    </testSourceDirectories>
+                    <outputFile>${basedir}/target/checkstyle-output.xml</outputFile>
+                    <resourceIncludes>
+                        **/*.properties,
+                        **/*.sh,
+                        **/*.bat,
+                        **/*.xml
+                    </resourceIncludes>
+                    <resourceExcludes>
+                        **/.asf.yaml,
+                        **/.github/**
+                    </resourceExcludes>
+                    <excludes>
+                    </excludes>
+                    <propertyExpansion>
+                        import.control=${maven.multiModuleProjectDirectory}/checkstyle/import-control.xml
+                        suppressions.file=${maven.multiModuleProjectDirectory}/checkstyle/suppressions.xml
+                    </propertyExpansion>
+                </configuration>
                 <executions>
                     <execution>
+                        <id>validate</id>
+                        <phase>process-sources</phase>
                         <goals>
                             <goal>check</goal>
                         </goals>
@@ -175,7 +193,6 @@
                 </executions>
             </plugin>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-release-plugin</artifactId>
                 <version>2.5.3</version>
             </plugin>
@@ -216,7 +233,6 @@
             <build>
                 <plugins>
                     <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-source-plugin</artifactId>
                         <version>3.2.1</version>
                         <executions>
@@ -250,7 +266,6 @@
                         </executions>
                     </plugin>
                     <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-gpg-plugin</artifactId>
                         <version>3.0.1</version>
                         <executions>

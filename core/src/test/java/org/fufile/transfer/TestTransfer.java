@@ -16,8 +16,6 @@
 
 package org.fufile.transfer;
 
-import org.fufile.transfer.FufileTransfer;
-
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 

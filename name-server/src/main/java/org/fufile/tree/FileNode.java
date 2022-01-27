@@ -13,6 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package org.fufile.tree;
 
 import java.io.DataInputStream;
@@ -22,7 +23,7 @@ import java.io.IOException;
 /**
  * File node.
  */
-public class FileNode extends TreeNode{
+public class FileNode extends TreeNode {
 
     public FileNode(String dir) {
         super(dir.substring(dir.lastIndexOf("/") + 1), dir);

@@ -13,6 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package org.fufile.tree;
 
 import org.fufile.errors.FufileException;
@@ -68,7 +69,7 @@ public class FileTree implements TreeHandler, Iterable<TreeNode> {
         String path = treeNode.getDir();
         String[] paths = path.split("/");
         TreeNode presentNode = rootDirNode;
-        Boolean isFile = treeNode instanceof FileNode ? true : false;
+        Boolean isFile = treeNode instanceof FileNode;
         boolean isLast = false;
         StringBuilder dirBuilder = new StringBuilder();
         for (int i = 1; i < paths.length; i++) {
@@ -130,9 +131,6 @@ public class FileTree implements TreeHandler, Iterable<TreeNode> {
 
     /**
      * Get a file or directory node.
-     *
-     * @param path
-     * @return
      */
     @Override
     public TreeNode getFileOrDirNode(String path, boolean isFile) throws FufileException {
@@ -190,7 +188,7 @@ public class FileTree implements TreeHandler, Iterable<TreeNode> {
         }
     }
 
-    private static class DichotomyResult {
+    final private static class DichotomyResult {
         final Enum<DichotomyResultEnum> result;
         final TreeNode treeNode;
         final int index;
@@ -204,40 +202,39 @@ public class FileTree implements TreeHandler, Iterable<TreeNode> {
 
     /**
      * Hash dichotomization to find node.
-     *
-     * @param nodeName
-     * @param hash
-     * @param childNodes
-     * @return
      */
     private DichotomyResult dichotomy(boolean isFile, String nodeName, int hash, List<TreeNode> childNodes,
                                       int startIndex, int endIndex) {
-        if (startIndex > endIndex)
+        if (startIndex > endIndex) {
             // The same hash node was not found.
             return new DichotomyResult(DichotomyResultEnum.FIND_NOTHING, null, startIndex);
+        }
         int mid = (startIndex + endIndex) / 2;
         TreeNode childNode = childNodes.get(mid);
-        if (childNode.getHash() < hash)
+        if (childNode.getHash() < hash) {
             return dichotomy(isFile, nodeName, hash, childNodes, mid + 1, endIndex);
-        else if (childNode.getHash() > hash)
+        } else if (childNode.getHash() > hash) {
             return dichotomy(isFile, nodeName, hash, childNodes, startIndex, mid - 1);
-        else {
+        } else {
             // Hash the same, traverse the linked list.
             for (; ; childNode = childNode.getNextNode()) {
                 if (childNode.getNodeName().equals(nodeName)) {
                     if (isFile) {
-                        if (childNode instanceof FileNode)
+                        if (childNode instanceof FileNode) {
                             // Find the file node.
                             return new DichotomyResult(DichotomyResultEnum.FIND_HASH_NAME, childNode, mid);
+                        }
                     } else {
-                        if (childNode instanceof DirNode)
+                        if (childNode instanceof DirNode) {
                             // Find the directory node.
                             return new DichotomyResult(DichotomyResultEnum.FIND_HASH_NAME, childNode, mid);
+                        }
                     }
                 }
                 // If no node is found, the hash found is returned.
-                if (childNode.getNextNode() == null)
+                if (childNode.getNextNode() == null) {
                     return new DichotomyResult(DichotomyResultEnum.FIND_HASH, childNode, 0);
+                }
             }
         }
     }
@@ -341,8 +338,6 @@ public class FileTree implements TreeHandler, Iterable<TreeNode> {
 
         /**
          * Find the next node in the preorder traversal
-         *
-         * @return
          */
         private void nextNode() {
             for (; ; ) {

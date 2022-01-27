@@ -13,11 +13,11 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package org.fufile.network;
 
 import org.fufile.server.SimpleServer;
 import org.fufile.transfer.TestTransfer;
-import org.fufile.network.*;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -55,8 +55,6 @@ public class SocketSelectorTest {
 
     /**
      * Tests SocketSelector to connect, read, and write in parallel.
-     *
-     * @throws Exception
      */
     @Test
     public void testWholeProcess() throws Exception {

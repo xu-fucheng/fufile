@@ -13,12 +13,13 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package org.fufile.errors;
 
 /**
  * The base class of all other Filepigger exceptions
  */
-public class FufileException extends RuntimeException{
+public class FufileException extends RuntimeException {
 
     private final static long serialVersionUID = 1L;
 

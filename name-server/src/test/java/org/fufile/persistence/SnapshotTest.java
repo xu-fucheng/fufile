@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 The Fufile Project
+ * Copyright 2022 The Fufile Project
  *
  * The Fufile Project licenses this file to you under the Apache License,
  * version 2.0 (the "License"); you may not use this file except in compliance
@@ -13,9 +13,9 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package org.fufile.persistence;
 
-import org.fufile.persistence.Snapshot;
 import org.fufile.tree.FileNode;
 import org.fufile.tree.FileTree;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,7 +30,7 @@ class SnapshotTest {
         fileTree = new FileTree();
     }
 
-//    @Test
+    //    @Test
     public void testClusterSerialize() throws Exception {
         fileTree.createFileOrDirNode(new FileNode("/image/red/red.jpg"));
         fileTree.createFileOrDirNode(new FileNode("/image/black/black.jpg"));
@@ -38,7 +38,7 @@ class SnapshotTest {
         snapshot.createClusterSnapshot();
     }
 
-//    @Test
+    //    @Test
     public void readSnapshot() throws Exception {
         Snapshot snapshot = new Snapshot("target/dir.snap");
         snapshot.readSnapshot();

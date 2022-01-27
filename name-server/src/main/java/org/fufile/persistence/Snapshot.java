@@ -13,11 +13,16 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package org.fufile.persistence;
 
 import org.fufile.tree.FileTree;
 
-import java.io.*;
+import java.io.DataOutputStream;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.DataInputStream;
 import java.nio.ByteBuffer;
 
 public class Snapshot {
@@ -34,8 +39,6 @@ public class Snapshot {
 
     /**
      * for test.
-     *
-     * @param snapshotDir
      */
     public Snapshot(String snapshotDir) {
         this.snapshotDir = snapshotDir;
@@ -62,8 +65,5 @@ public class Snapshot {
         FileHeader fileHeader = new FileHeader();
         fileHeader.deserialize(dataInputStream);
         fileTree.deserialize(dataInputStream);
-        System.out.println(SNAP_MAGIC == fileHeader.getMagic());
-        System.out.println(fileHeader.getVersion());
-        System.out.println(dataInputStream.available());
     }
 }

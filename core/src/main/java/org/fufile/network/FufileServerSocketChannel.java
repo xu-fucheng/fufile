@@ -13,6 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package org.fufile.network;
 
 import java.nio.channels.SelectableChannel;
@@ -23,7 +24,6 @@ public class FufileServerSocketChannel extends FufileChannel {
     public FufileServerSocketChannel(String channelId, SelectionKey selectionKey, SelectableChannel socketChannel) {
         super(channelId, selectionKey, socketChannel);
     }
-
 
 
 }

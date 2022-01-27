@@ -13,6 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package org.fufile;
 
 import org.slf4j.Logger;
@@ -21,7 +22,7 @@ import java.io.IOException;
 
 public class FufileDataServer {
 
-    private static Logger logger = LoggerFactory.getLogger(FufileDataServer.class);
+    private final static Logger log = LoggerFactory.getLogger(FufileDataServer.class);
 
     public static void main(String[] args) throws IOException {
 

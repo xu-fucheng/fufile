@@ -13,13 +13,10 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package org.fufile.tree;
 
 import org.fufile.errors.FufileException;
-import org.fufile.tree.DirNode;
-import org.fufile.tree.FileNode;
-import org.fufile.tree.FileTree;
-import org.fufile.tree.TreeNode;
 import org.junit.jupiter.api.BeforeEach;
 
 import java.io.File;
@@ -39,19 +36,19 @@ class FileTreeTest {
         fileTree = new FileTree();
     }
 
-//    @Test
+    //    @Test
     public void testAddAndGetFileNode() {
         try {
             fileTree.createFileOrDirNode(new FileNode("/image/red/red.jpg"));
             fileTree.createFileOrDirNode(new FileNode("/image/black/black.jpg"));
             TreeNode treeNode = fileTree.getFileOrDirNode("/image/red/red.jpg", true);
             assertEquals(treeNode.getNodeName(), "red.jpg");
-        }catch (FufileException fufileException) {
-            System.out.println(fufileException.getMessage());
+        } catch (FufileException fufileException) {
+
         }
     }
 
-//    @Test
+    //    @Test
     public void testIterateTreeNode() {
         String[] urls = {"/image/red/red.jpg", "/image/black/black.jpg", "/image/blue.jpg"};
         List<String> urlList = new ArrayList<>();
@@ -67,7 +64,7 @@ class FileTreeTest {
         }
     }
 
-//    @Test
+    //    @Test
     public void testRemoveFileNode() {
         try {
             fileTree.createFileOrDirNode(new FileNode("/image/red/red.jpg"));
@@ -77,8 +74,8 @@ class FileTreeTest {
             treeNode = fileTree.getFileOrDirNode("/image/red/red.jpg", true);
 //            assertThrows()
             File file = new File("/");
-        }catch (FufileException fufileException) {
-            System.out.println(fufileException.getMessage());
+        } catch (FufileException fufileException) {
+
         }
     }
 

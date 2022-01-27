@@ -13,6 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package org.fufile.client;
 
 import java.io.IOException;
@@ -27,6 +28,5 @@ public class FufileClient {
 
     public void upload(InputStream inputStream) throws IOException {
         int num = inputStream.available();
-        System.out.println(num);
     }
 }

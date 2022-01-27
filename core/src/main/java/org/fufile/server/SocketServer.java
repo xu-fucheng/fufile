@@ -13,17 +13,15 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package org.fufile.server;
 
-import org.fufile.network.FufileChannel;
 import org.fufile.network.FufileSocketChannel;
 import org.fufile.network.SocketSelector;
 
 import java.io.IOException;
 
 /**
- * @author xufucheng
- * @since 2021/12/1
  */
 public class SocketServer implements Runnable {
 

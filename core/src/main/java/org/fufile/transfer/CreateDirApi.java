@@ -33,6 +33,7 @@ public class CreateDirApi extends FufileApi {
 
     public static class CreateDirRequest extends FufileRequest {
         private RequestMessage requestMessage;
+
         public CreateDirRequest() {
             requestMessage = CreateDirMessage.createRequestMessage();
         }
@@ -45,6 +46,7 @@ public class CreateDirApi extends FufileApi {
 
     public static class CreateDirResponse extends FufileResponse {
         private ResponseMessage responseMessage;
+
         public CreateDirResponse() {
             responseMessage = CreateDirMessage.createResponseMessage();
         }

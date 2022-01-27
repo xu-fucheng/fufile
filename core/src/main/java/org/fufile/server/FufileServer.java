@@ -13,6 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package org.fufile.server;
 
 import org.fufile.network.FufileSocketChannel;
@@ -68,7 +69,7 @@ public class FufileServer implements Runnable {
                     }
                 }
 
-            }catch (Exception e){
+            } catch (Exception e) {
 
             }
 

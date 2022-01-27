@@ -13,13 +13,14 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package org.fufile.persistence;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-public class FileHeader implements Serialize{
+public class FileHeader implements Serialize {
 
     private int magic;
 

@@ -13,6 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package org.fufile.network;
 
 import org.fufile.errors.IllegalNetDataException;
@@ -32,7 +33,6 @@ public class ReceivedDataHandler {
         if (type.equals(REQUEST)) {
             byte[] bytes = new byte[requestBuffer.remaining()];
             requestBuffer.get(bytes);
-            System.out.println(new String(bytes));
 //            RequestData requestData = new RequestData();
 
 

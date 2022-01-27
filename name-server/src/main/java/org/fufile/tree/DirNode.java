@@ -13,6 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package org.fufile.tree;
 
 import java.io.DataInputStream;
@@ -23,7 +24,7 @@ import java.util.List;
 /**
  * Directory node.
  */
-public class DirNode extends TreeNode{
+public class DirNode extends TreeNode {
 
     private List<TreeNode> childNodeList;
 

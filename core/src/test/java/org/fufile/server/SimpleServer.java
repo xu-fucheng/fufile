@@ -13,6 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package org.fufile.server;
 
 import java.io.DataInputStream;
@@ -94,12 +95,14 @@ public class SimpleServer extends Thread {
         isClosing = true;
         serverSocket.close();
         synchronized (sockets) {
-            for (Socket socket : sockets)
+            for (Socket socket : sockets) {
                 socket.close();
+            }
         }
         // Wait for threads to died
-        for (Thread t : threads)
+        for (Thread t : threads) {
             t.join();
+        }
         join();
     }
 }
