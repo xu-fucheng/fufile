@@ -1,4 +1,4 @@
 # FuFile
-FuFile is a distributed file system for large-scale data storage.
+FuFile is a high-performance, fault-tolerant, and scalable large-scale distributed storage system that provides storage and query of multiple data structures and files.
 # Links
-[Web Site](https://fufile.org)
+[Web Site](https://fufile.org) (under construction)
