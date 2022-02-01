@@ -20,7 +20,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <artifactId>fufile-parent</artifactId>
+        <artifactId>fufile-root</artifactId>
         <groupId>org.fufile</groupId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
