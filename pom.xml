@@ -62,7 +62,7 @@
         <module>example</module>
         <module>name-server</module>
         <module>data-server</module>
-        <module>generator</module>
+        <module>message</module>
     </modules>
 
     <properties>

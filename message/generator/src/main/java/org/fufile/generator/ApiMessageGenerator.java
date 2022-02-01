@@ -16,9 +16,17 @@
 
 package org.fufile.generator;
 
+import java.io.IOException;
+
 public class ApiMessageGenerator {
 
-    public static void main(String[] args) {
-
+    public static void main(String[] args) throws IOException {
+//        System.out.println(args[0]);
+//        File dir = new File(args[0]);
+//        if (!dir.exists()) {
+//            dir.mkdirs();
+//        }
+//        File file = new File(args[0] + "A.java");
+//        file.createNewFile();
     }
 }

@@ -5,3 +5,6 @@ target
 *.log
 *.iml
 .workflow
+
+# generated
+message/generated/src/main/java/org/fufile/generated

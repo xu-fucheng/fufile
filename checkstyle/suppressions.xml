@@ -21,5 +21,6 @@
         "https://checkstyle.org/dtds/suppressions_1_2.dtd">
 
 <suppressions>
-
+    <suppress id="dontUseSystemOutPrint(ln)"
+              files="ApiMessageGenerator.java"/>
 </suppressions>

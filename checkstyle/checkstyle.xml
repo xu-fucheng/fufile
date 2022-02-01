@@ -126,6 +126,7 @@
         <!-- Regexp -->
         <!-- See https://checkstyle.org/config_regexp.html -->
         <module name="RegexpSinglelineJava">
+            <property name="id" value="dontUseSystemOutPrint(ln)"/>
             <property name="format" value="System\.out\.print(ln)?"/>
             <property name="message" value="Prohibit invoking System.out.println !"/>
         </module>
