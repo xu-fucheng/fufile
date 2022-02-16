@@ -57,12 +57,12 @@
     </issueManagement>
 
     <modules>
+        <module>message</module>
         <module>core</module>
         <module>client</module>
-        <module>example</module>
         <module>name-server</module>
         <module>data-server</module>
-        <module>message</module>
+        <module>example</module>
     </modules>
 
     <properties>

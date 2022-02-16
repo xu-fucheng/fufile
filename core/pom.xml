@@ -27,5 +27,11 @@
     <artifactId>fufile-core</artifactId>
     <packaging>jar</packaging>
 
-
+    <dependencies>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>fufile-generated</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+    </dependencies>
 </project>
