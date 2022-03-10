@@ -26,6 +26,8 @@ public class FufileDataServer {
 
     public static void main(String[] args) throws IOException {
 
+        log.info(log.getName());
+
 //        FileTree dirTree = new FileTree();
 //
 //        FufileSelector selector = new FufileSelector(Selector.open());

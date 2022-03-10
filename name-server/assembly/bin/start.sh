@@ -1,3 +1,5 @@
+#!/bin/bash
+#
 # Copyright 2021 The Fufile Project
 #
 # The Fufile Project licenses this file to you under the Apache License,
@@ -11,13 +13,7 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
+#
 
-# Set root logger level to DEBUG and its only appender to A1.
-log4j.rootLogger=DEBUG, A1
-
-# A1 is set to be a ConsoleAppender.
-log4j.appender.A1=org.apache.log4j.ConsoleAppender
-
-# A1 uses PatternLayout.
-log4j.appender.A1.layout=org.apache.log4j.PatternLayout
-log4j.appender.A1.layout.ConversionPattern=%-4r [%t] %-5p %c %x - %m%n
+export FUFILE_DIR="`dirname "$0"`/.."
+exec java -Dlogback.configurationFile=${FUFILE_DIR}/config/logback.xml -Dfufile.dir=${FUFILE_DIR}
