@@ -22,11 +22,11 @@ import java.io.IOException;
 
 public class FufileDataServer {
 
-    private final static Logger log = LoggerFactory.getLogger(FufileDataServer.class);
+    private final static Logger logger = LoggerFactory.getLogger(FufileDataServer.class);
 
     public static void main(String[] args) throws IOException {
 
-        log.info(log.getName());
+        logger.info(logger.getName());
 
 //        FileTree dirTree = new FileTree();
 //
