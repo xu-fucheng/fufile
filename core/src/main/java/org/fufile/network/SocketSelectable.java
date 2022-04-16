@@ -22,8 +22,19 @@ import java.util.Collection;
 
 public interface SocketSelectable extends Selectable {
 
+    /**
+     * Connect to the specified address, and identifying the connection with a unique ID.
+     * If the connection is established immediately, the channel will be registered as
+     * read key，otherwise registered as connect key.
+     * @param channelId Identifies the unique ID of this connection
+     * @param address The address to connect to
+     */
     void connect(String channelId, InetSocketAddress address) throws IOException;
 
+    /**
+     * Selects client socket keys, then handle them.
+     * @param timeout If positive, block for up to <tt>timeout</tt> milliseconds,
+     */
     void doPool(long timeout) throws IOException;
 
     void send(Sender sender) throws IOException;

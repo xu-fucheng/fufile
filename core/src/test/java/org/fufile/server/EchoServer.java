@@ -25,16 +25,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * A simple server that can handle multiple connections simultaneously and return received data.
+ * A echo server that can handle multiple connections simultaneously and return received data.
  */
-public class SimpleServer extends Thread {
+public class EchoServer extends Thread {
     private final int port;
     private final ServerSocket serverSocket;
     private final List<Thread> threads;
     private final List<Socket> sockets;
     private volatile boolean isClosing = false;
 
-    public SimpleServer() throws Exception {
+    public EchoServer() throws Exception {
         this.serverSocket = new ServerSocket(0);
         this.port = this.serverSocket.getLocalPort();
         this.threads = new ArrayList<>();
@@ -91,14 +91,18 @@ public class SimpleServer extends Thread {
         return port;
     }
 
-    public void close() throws IOException, InterruptedException {
-        isClosing = true;
-        serverSocket.close();
+    public void closeConnections() throws IOException {
         synchronized (sockets) {
             for (Socket socket : sockets) {
                 socket.close();
             }
         }
+    }
+
+    public void close() throws IOException, InterruptedException {
+        isClosing = true;
+        serverSocket.close();
+        closeConnections();
         // Wait for threads to died
         for (Thread t : threads) {
             t.join();

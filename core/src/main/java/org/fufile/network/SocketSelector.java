@@ -29,7 +29,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 
 public class SocketSelector extends FufileSelector implements SocketSelectable {
 
-    private final Map<String, FufileSocketChannel> connectedChannels;
+    protected final Map<String, FufileSocketChannel> connectedChannels;
     private final LinkedHashMap<String, FufileSocketChannel> receivedChannels;
     private final Queue<FufileSocketChannel> newConnections;
     private final int connectionQueueSize = 16;
@@ -47,22 +47,17 @@ public class SocketSelector extends FufileSelector implements SocketSelectable {
         boolean connected = false;
         try {
             configureSocket(socketChannel);
-            connected = socketChannel.connect(address);
-            if (!connected) {
+            connected = doConnect(socketChannel, address);
+            if (connected) {
+                SelectionKey key = socketChannel.register(selector, SelectionKey.OP_READ);
+                FufileSocketChannel channel = new FufileSocketChannel(channelId, key, socketChannel);
+                key.attach(channel);
+                connectedChannels.put(channelId, channel);
+            } else {
                 SelectionKey key = socketChannel.register(selector, SelectionKey.OP_CONNECT);
                 key.attach(new FufileSocketChannel(channelId, key, socketChannel));
-            } else {
-                if (socketChannel.isConnected() && socketChannel.finishConnect()) {
-                    configureSocketForTest(socketChannel);
-                    SelectionKey key = socketChannel.register(selector, SelectionKey.OP_READ);
-                    FufileSocketChannel channel = new FufileSocketChannel(channelId, key, socketChannel);
-                    key.attach(channel);
-                    connectedChannels.put(channelId, channel);
-                } else {
-                    throw new IOException();
-                }
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             if (connected) {
                 connectedChannels.remove(channelId);
             }
@@ -70,6 +65,7 @@ public class SocketSelector extends FufileSelector implements SocketSelectable {
             throw e;
         }
     }
+
 
     /**
      * 这地方应该传入ByteBuffer的包装类
@@ -97,11 +93,7 @@ public class SocketSelector extends FufileSelector implements SocketSelectable {
         int connectionsRegistered = 0;
         while (connectionsRegistered < connectionQueueSize && !newConnections.isEmpty()) {
             FufileSocketChannel channel = newConnections.poll();
-            if (channel.isRegistered()) {
-                channel.completeConnection();
-            } else {
-                //
-            }
+            channel.completeConnection();
             connectedChannels.put(channel.getChannelId(), channel);
         }
     }
@@ -118,7 +110,6 @@ public class SocketSelector extends FufileSelector implements SocketSelectable {
         }
         if (key.isWritable()) {
             channel.write();
-            key.interestOps(key.interestOps() & ~SelectionKey.OP_WRITE);
         }
         if (key.isReadable()) {
             FufileSocketChannel fufileSocketChannel = (FufileSocketChannel) key.attachment();

@@ -16,11 +16,14 @@
 
 package org.fufile.transfer;
 
+import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 
 /**
  */
 public interface FufileTransfer {
 
-    ByteBuffer getPayLoad();
+    ByteBuffer serialize();
+
+    void deserialize() throws UnsupportedEncodingException;
 }

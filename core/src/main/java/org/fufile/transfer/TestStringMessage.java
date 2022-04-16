@@ -16,24 +16,41 @@
 
 package org.fufile.transfer;
 
+import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 
-public class TestTransfer implements FufileTransfer {
+public class TestStringMessage implements FufileTransfer {
 
-    private final String message;
+    private String message;
+    private ByteBuffer payload;
 
-    public TestTransfer(String message) {
+    public TestStringMessage(String message) {
         this.message = message;
     }
 
+    public TestStringMessage(ByteBuffer payload) {
+        this.payload = payload;
+    }
+
     @Override
-    public ByteBuffer getPayLoad() {
+    public ByteBuffer serialize() {
         byte[] bytes = message.getBytes(Charset.forName("utf-8"));
         ByteBuffer byteBuffer = ByteBuffer.allocate(bytes.length + 4);
         byteBuffer.putInt(bytes.length);
         byteBuffer.put(bytes);
         byteBuffer.flip();
         return byteBuffer;
+    }
+
+    @Override
+    public void deserialize() throws UnsupportedEncodingException {
+        byte[] bytes = new byte[payload.remaining()];
+        payload.get(bytes);
+        message = new String(bytes, "utf-8");
+    }
+
+    public String getMessage() {
+        return message;
     }
 }

@@ -27,12 +27,16 @@ public abstract class FufileChannel {
 
     private final String channelId;
     protected SelectionKey selectionKey;
-    protected final SelectableChannel socketChannel;
+    protected final SelectableChannel channel;
 
-    public FufileChannel(String channelId, SelectionKey selectionKey, SelectableChannel socketChannel) {
+    public FufileChannel(String channelId, SelectionKey selectionKey, SelectableChannel channel) {
         this.channelId = channelId;
         this.selectionKey = selectionKey;
-        this.socketChannel = socketChannel;
+        this.channel = channel;
+    }
+
+    public SelectableChannel channel() {
+        return channel;
     }
 
     public String getChannelId() {
@@ -45,7 +49,7 @@ public abstract class FufileChannel {
 
     public void close() throws IOException {
         selectionKey.cancel();
-        socketChannel.close();
+        channel.close();
     }
 
 }

@@ -18,7 +18,9 @@ package org.fufile.network;
 
 import org.fufile.transfer.FufileTransfer;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.channels.SocketChannel;
 
 public class Sender {
 
@@ -29,14 +31,18 @@ public class Sender {
      */
     private final FufileTransfer fufileTransfer;
 
+    private final ByteBuffer payload;
+
     public Sender(String channelId,
                   FufileTransfer fufileTransfer) {
         this.channelId = channelId;
         this.fufileTransfer = fufileTransfer;
+        payload = fufileTransfer.serialize();
     }
 
-    public ByteBuffer getPayLoad() {
-        return fufileTransfer.getPayLoad();
+    public boolean toWrite(SocketChannel socketChannel) throws IOException {
+        socketChannel.write(payload);
+        return payload.hasRemaining();
     }
 
     public String getChannelId() {

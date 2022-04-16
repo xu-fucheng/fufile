@@ -19,6 +19,7 @@ package org.fufile.network;
 import org.fufile.errors.FufileException;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
@@ -41,7 +42,7 @@ public abstract class FufileSelector {
 
     public void pool(long timeout) throws IOException {
         if (timeout <= 0) {
-            selector.selectNow();
+            selector.select();
         } else {
             selector.select(500);
         }
@@ -63,12 +64,12 @@ public abstract class FufileSelector {
         socketChannel.socket().setTcpNoDelay(true);
     }
 
-    protected void configureSocketForTest(SocketChannel socketChannel) throws IOException {
+    protected boolean doConnect(SocketChannel channel, InetSocketAddress address) throws IOException {
+        return channel.connect(address);
     }
 
     /**
-     * 将取出的事件交给子类处理
-     *
+     * Hands the selected events to subclasses for processing
      */
     private void pollSelectionKeys(Set<SelectionKey> selectionKeys) throws IOException {
         for (SelectionKey key : selectionKeys) {

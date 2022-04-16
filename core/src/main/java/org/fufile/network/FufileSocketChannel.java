@@ -52,11 +52,10 @@ public class FufileSocketChannel extends FufileChannel {
      * 1.size has remaining && requestBuffer has remaining.
      * 2.size read full && requestBuffer has remaining.
      * 3.size read full && requestBuffer read full.
-     *
      */
     public boolean read() throws IOException {
         if (size.hasRemaining()) {
-            int readSize = ((SocketChannel) socketChannel).read(size);
+            int readSize = channel().read(size);
             if (readSize < 0) {
                 // opposite terminal close the channel
                 throw new EOFException();
@@ -82,13 +81,12 @@ public class FufileSocketChannel extends FufileChannel {
     }
 
     public void register(Selector sel, int ops) throws IOException {
-        SelectionKey selectionKey = socketChannel.register(sel, ops);
+        SelectionKey selectionKey = channel.register(sel, ops);
         selectionKey.attach(this);
     }
 
     private boolean readRequestBytes() throws IOException {
-//        size.rewind();
-        int readSize = ((SocketChannel) socketChannel).read(payload);
+        int readSize = channel().read(payload);
         if (readSize < 0) {
             // opposite terminal close the channel
             throw new EOFException();
@@ -100,29 +98,31 @@ public class FufileSocketChannel extends FufileChannel {
             payload = null;
             size.clear();
             return true;
-//            receivedDataHandler.readBuffer(payload);
         }
         return false;
     }
 
     public void write() throws IOException {
-        ((SocketChannel) socketChannel).write(sender.getPayLoad());
+        if (!sender.toWrite(channel())) {
+            selectionKey.interestOps(selectionKey.interestOps() & ~SelectionKey.OP_WRITE);
+        }
     }
 
     public boolean finishConnect() throws IOException {
-        return ((SocketChannel) socketChannel).finishConnect();
-    }
-
-    public boolean isRegistered() {
-        return selectionKey != null;
+        return channel().finishConnect();
     }
 
     public void completeConnection() {
         selectionKey.interestOps(selectionKey.interestOps() & ~SelectionKey.OP_CONNECT | SelectionKey.OP_READ);
     }
 
+    public SocketChannel channel() {
+        return (SocketChannel) channel;
+    }
 
     public Receiver getReceiver() {
+        Receiver receiver = this.receiver;
+        this.receiver = null;
         return receiver;
     }
 }

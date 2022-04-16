@@ -20,5 +20,11 @@ import java.io.IOException;
 
 public interface Selectable extends AutoCloseable {
 
+    /**
+     * Selects a set of keys whose corresponding channels are ready for I/O operations,
+     * then handle these events.
+     * @param timeout If positive, block for up to <tt>timeout</tt> milliseconds,
+     *                If it's less than or equal to 0, block indefinitely.
+     */
     void doPool(long timeout) throws IOException;
 }

@@ -18,6 +18,7 @@ package org.fufile.network;
 
 import java.nio.channels.SelectableChannel;
 import java.nio.channels.SelectionKey;
+import java.nio.channels.ServerSocketChannel;
 
 public class FufileServerSocketChannel extends FufileChannel {
 
@@ -25,5 +26,7 @@ public class FufileServerSocketChannel extends FufileChannel {
         super(channelId, selectionKey, socketChannel);
     }
 
-
+    public ServerSocketChannel channel() {
+        return (ServerSocketChannel) channel;
+    }
 }
