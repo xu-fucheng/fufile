@@ -33,7 +33,7 @@ public class SocketServer implements Runnable {
 
     public SocketServer() {
         this.socketSelector = new SocketSelector();
-        remoteAddresses = new ArrayBlockingQueue(16);;
+        remoteAddresses = new ArrayBlockingQueue(16);
     }
 
     public boolean allocateNewConnections(FufileSocketChannel channel) throws IOException {
