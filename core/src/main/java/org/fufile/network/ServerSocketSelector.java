@@ -33,7 +33,7 @@ public class ServerSocketSelector extends FufileSelector implements ServerSocket
 
     private ArrayList newConnections;
     private final int maxConnectionsPerSelect = 8;
-    private ServerSocketChannel serverSocketChannel;
+    private FufileServerSocketChannel channel;
 
     public ServerSocketSelector(InetSocketAddress address) throws IOException {
         super();
@@ -45,8 +45,8 @@ public class ServerSocketSelector extends FufileSelector implements ServerSocket
     protected void pollSelectionKey(SelectionKey key) throws IOException {
         if (key.isAcceptable()) {
             ServerSocketChannel serverSocketChannel = (ServerSocketChannel) key.channel();
-            SocketChannel socketChannel = null;
-            do {
+            SocketChannel socketChannel;
+            while (newConnections.size() < maxConnectionsPerSelect) {
                 socketChannel = serverSocketChannel.accept();
                 if (socketChannel == null) {
                     break;
@@ -54,15 +54,16 @@ public class ServerSocketSelector extends FufileSelector implements ServerSocket
                 socketChannel.configureBlocking(false);
                 socketChannel.socket().setKeepAlive(true);
                 socketChannel.socket().setTcpNoDelay(true);
-                FufileChannel c = new FufileSocketChannel(socketChannel.getRemoteAddress().toString(), null, socketChannel);
-                newConnections.add(c);
-            } while (newConnections.size() <= maxConnectionsPerSelect);
+                FufileChannel channel = new FufileSocketChannel(socketChannel.getRemoteAddress().toString(), socketChannel);
+                newConnections.add(channel);
+            }
         }
     }
 
 
     private void bind(InetSocketAddress address) throws IOException {
-        serverSocketChannel = ServerSocketChannel.open();
+        ServerSocketChannel serverSocketChannel = ServerSocketChannel.open();
+        channel = new FufileServerSocketChannel("", serverSocketChannel);
         serverSocketChannel.configureBlocking(false);
         serverSocketChannel.socket().bind(address);
         serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
@@ -83,7 +84,7 @@ public class ServerSocketSelector extends FufileSelector implements ServerSocket
     }
 
     @Override
-    public ServerSocketChannel getServerSocketChannel() {
-        return serverSocketChannel;
+    public FufileServerSocketChannel getFufileServerSocketChannel() {
+        return channel;
     }
 }

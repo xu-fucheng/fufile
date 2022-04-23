@@ -32,7 +32,7 @@ public class ServerSocketSelectorTest {
     @BeforeEach
     public void setUp() throws Exception {
         selectable = new ServerSocketSelector(new InetSocketAddress(0));
-        port = selectable.getServerSocketChannel().socket().getLocalPort();
+        port = selectable.getFufileServerSocketChannel().getLocalPort();
     }
 
     @AfterEach

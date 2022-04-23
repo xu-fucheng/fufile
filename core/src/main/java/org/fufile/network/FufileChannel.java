@@ -29,9 +29,8 @@ public abstract class FufileChannel {
     protected SelectionKey selectionKey;
     protected final SelectableChannel channel;
 
-    public FufileChannel(String channelId, SelectionKey selectionKey, SelectableChannel channel) {
+    public FufileChannel(String channelId, SelectableChannel channel) {
         this.channelId = channelId;
-        this.selectionKey = selectionKey;
         this.channel = channel;
     }
 

@@ -16,12 +16,11 @@
 
 package org.fufile.network;
 
-import java.nio.channels.ServerSocketChannel;
 import java.util.List;
 
 public interface ServerSocketSelectable extends Selectable {
 
-    ServerSocketChannel getServerSocketChannel();
+    FufileServerSocketChannel getFufileServerSocketChannel();
 
     List<FufileSocketChannel> getNewConnections();
 

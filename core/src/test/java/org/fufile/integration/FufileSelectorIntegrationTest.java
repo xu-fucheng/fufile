@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 The Fufile Project
+ * Copyright 2022 The Fufile Project
  *
  * The Fufile Project licenses this file to you under the Apache License,
  * version 2.0 (the "License"); you may not use this file except in compliance
@@ -14,22 +14,7 @@
  * under the License.
  */
 
-package org.fufile.network;
+package org.fufile.integration;
 
-import java.nio.channels.SelectableChannel;
-import java.nio.channels.ServerSocketChannel;
-
-public class FufileServerSocketChannel extends FufileChannel {
-
-    public FufileServerSocketChannel(String channelId, SelectableChannel socketChannel) {
-        super(channelId, socketChannel);
-    }
-
-    public ServerSocketChannel channel() {
-        return (ServerSocketChannel) channel;
-    }
-
-    public int getLocalPort() {
-        return channel().socket().getLocalPort();
-    }
+public class FufileSelectorIntegrationTest {
 }
