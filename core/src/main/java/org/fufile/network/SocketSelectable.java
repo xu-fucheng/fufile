@@ -43,7 +43,7 @@ public interface SocketSelectable extends Selectable {
 
     void getSends();
 
-    void registerNewConnections();
+    void registerNewConnections() throws IOException;
 
     Collection<FufileSocketChannel> getReceive();
 }

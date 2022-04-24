@@ -17,6 +17,8 @@
 package org.fufile.network;
 
 import org.fufile.errors.IllegalNetDataException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.EOFException;
 import java.io.IOException;
@@ -34,6 +36,8 @@ import java.nio.channels.SocketChannel;
  * will throw {@link IOException}.
  */
 public class FufileSocketChannel extends FufileChannel {
+
+    private final static Logger logger = LoggerFactory.getLogger(FufileSocketChannel.class);
 
     private final ByteBuffer size;
     private ByteBuffer payload;

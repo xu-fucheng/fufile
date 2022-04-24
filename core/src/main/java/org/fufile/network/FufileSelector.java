@@ -17,6 +17,8 @@
 package org.fufile.network;
 
 import org.fufile.errors.FufileException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -29,6 +31,8 @@ import java.util.Set;
  * Use JDK selector to poll and handle network I/O events.
  */
 public abstract class FufileSelector {
+
+    private final static Logger logger = LoggerFactory.getLogger(FufileSelector.class);
 
     protected final Selector selector;
 
@@ -44,7 +48,7 @@ public abstract class FufileSelector {
         if (timeout <= 0) {
             selector.select();
         } else {
-            selector.select(500);
+            selector.select(timeout);
         }
         Set<SelectionKey> selectionKeys = selector.selectedKeys();
         pollSelectionKeys(selectionKeys);

@@ -26,20 +26,21 @@ import java.net.InetSocketAddress;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * raft server
  */
 public class FufileRaftServer implements Runnable {
 
-    private Logger logger = LoggerFactory.getLogger(FufileRaftServer.class);
+    private final static Logger logger = LoggerFactory.getLogger(FufileRaftServer.class);
 
     private SocketServer[] socketServers;
     private static final int SOCKET_PROCESS_THREAD_NUM;
     private int index;
     private ServerSocketSelector serverSocketSelector;
     private List<String> remoteAddresses;
-    private List<String> disconnected;
+    private List<InetSocketAddress> disconnected;
     private List<String> connecting;
     private Map<String, FufileSocketChannel> connectedChannels;
 
@@ -51,11 +52,15 @@ public class FufileRaftServer implements Runnable {
     public FufileRaftServer(InetSocketAddress socketAddress, List<String> remoteAddresses) throws IOException {
         serverSocketSelector = new ServerSocketSelector(socketAddress);
         this.remoteAddresses = remoteAddresses;
+        connectedChannels = new ConcurrentHashMap<>();
         socketServers = new SocketServer[SOCKET_PROCESS_THREAD_NUM];
+        for (SocketServer socketServer : socketServers) {
+            socketServer = new SocketServer(connectedChannels);
+        }
+        connect();
         for (SocketServer socketServer : socketServers) {
             socketServer.run();
         }
-        connect();
     }
 
     /**
@@ -65,6 +70,8 @@ public class FufileRaftServer implements Runnable {
     public void run() {
         // 处理新connections
         // 分配新connections
+
+
         for (; ; ) {
             // 连接：未连接的
 
@@ -98,9 +105,9 @@ public class FufileRaftServer implements Runnable {
     }
 
     public void connect() {
-        SocketServer socketServer = socketServers[Math.abs(index++) % socketServers.length];
 
         disconnected.forEach(address -> {
+            SocketServer socketServer = socketServers[Math.abs(index++) % socketServers.length];
             socketServer.allocateConnections(address);
         });
 

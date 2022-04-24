@@ -16,5 +16,48 @@
 
 package org.fufile.integration;
 
+import org.fufile.network.FufileSocketChannel;
+import org.fufile.network.Sender;
+import org.fufile.network.ServerSocketSelectable;
+import org.fufile.network.ServerSocketSelector;
+import org.fufile.network.SocketSelector;
+import org.fufile.transfer.TestStringMessage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.net.InetSocketAddress;
+
+/**
+ *
+ */
 public class FufileSelectorIntegrationTest {
+
+    private final static Logger logger = LoggerFactory.getLogger(FufileSelectorIntegrationTest.class);
+
+//    @Test
+    public void test() throws IOException, InterruptedException {
+        ServerSocketSelectable serverSocketSelectable = new ServerSocketSelector(new InetSocketAddress(8989));
+        int port = serverSocketSelectable.getFufileServerSocketChannel().channel().socket().getLocalPort();
+        SocketSelector socketSelector = new SocketSelector();
+        socketSelector.connect("", new InetSocketAddress("localhost", port));
+
+        serverSocketSelectable.doPool(0);
+        FufileSocketChannel channel = serverSocketSelectable.getNewConnections().iterator().next();
+        SocketSelector serverSelector = new SocketSelector();
+        serverSelector.allocateNewConnections(channel);
+        serverSelector.registerNewConnections();
+        channel.close();
+
+        socketSelector.doPool(0);
+        socketSelector.registerNewConnections();
+        socketSelector.send(new Sender("", new TestStringMessage("100")));
+        socketSelector.doPool(0);
+        socketSelector.send(new Sender("", new TestStringMessage("100")));
+        socketSelector.doPool(0);
+        serverSelector.pool(0);
+        Thread.sleep(10000);
+    }
+
+
 }

@@ -16,6 +16,9 @@
 
 package org.fufile.network;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.channels.SelectionKey;
@@ -29,6 +32,8 @@ import java.util.concurrent.ArrayBlockingQueue;
 
 public class SocketSelector extends FufileSelector implements SocketSelectable {
 
+    private final static Logger logger = LoggerFactory.getLogger(SocketSelector.class);
+
     protected final Map<String, FufileSocketChannel> connectedChannels;
     private final LinkedHashMap<String, FufileSocketChannel> receivedChannels;
     private final Queue<FufileSocketChannel> newConnections;
@@ -41,8 +46,19 @@ public class SocketSelector extends FufileSelector implements SocketSelectable {
         newConnections = new ArrayBlockingQueue(connectionQueueSize);
     }
 
+    public SocketSelector(Map connectedChannels) {
+        super();
+        this.connectedChannels = connectedChannels;
+        receivedChannels = new LinkedHashMap<>();
+        newConnections = new ArrayBlockingQueue(connectionQueueSize);
+    }
+
     @Override
     public void connect(String channelId, InetSocketAddress address) throws IOException {
+        if (connectedChannels.containsKey(channelId)) {
+            logger.error("There is already a connection for channelId " + channelId);
+            return;
+        }
         SocketChannel socketChannel = SocketChannel.open();
         boolean connected = false;
         try {
@@ -51,6 +67,10 @@ public class SocketSelector extends FufileSelector implements SocketSelectable {
             if (connected) {
                 FufileSocketChannel channel = new FufileSocketChannel(channelId, socketChannel);
                 channel.register(selector, SelectionKey.OP_READ);
+                if (connectedChannels.containsKey(channelId)) {
+                    logger.error("There is already a connection for channelId " + channelId);
+                    return;
+                }
                 connectedChannels.put(channelId, channel);
             } else {
                 FufileSocketChannel channel = new FufileSocketChannel(channelId, socketChannel);
@@ -92,11 +112,16 @@ public class SocketSelector extends FufileSelector implements SocketSelectable {
         return isSuccess;
     }
 
-    public void registerNewConnections() {
+    public void registerNewConnections() throws IOException {
         int connectionsRegistered = 0;
         while (!newConnections.isEmpty() && connectionsRegistered < connectionQueueSize) {
             connectionsRegistered++;
             FufileSocketChannel channel = newConnections.poll();
+            if (connectedChannels.containsKey(channel.getChannelId())) {
+                channel.close();
+                logger.error("There is already a connection for channelId " + channel.getChannelId());
+                continue;
+            }
             channel.interestOps(SelectionKey.OP_READ);
             connectedChannels.put(channel.getChannelId(), channel);
         }
