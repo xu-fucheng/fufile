@@ -2,6 +2,7 @@
 [![LICENSE](https://img.shields.io/github/license/xu-fucheng/fufile)](https://gitee.com/xufucheng/fufile/blob/trunk/LICENSE)
 [![Language](https://img.shields.io/badge/language-Java-red)](https://java.com/)
 
+> 如果此项目长时间未更新，那很有可能是我在憋大的！
 ## 简介
 
 FuFile是一款开源的大规模分布式存储系统，可作为文件系统使用，也可作为数据库使用。
@@ -10,7 +11,7 @@ FuFile是一款开源的大规模分布式存储系统，可作为文件系统�
 
 + 高可用
 
-在发生网络故障或部分节点宕机的情况下，只要剩余可用节点数量满足条件，则集群可继续提供服务。
+在发生网络故障或部分节点宕机的情况下，只要剩余可用节点数量占多数，则集群可继续提供服务。
 
 + 强一致性
 
@@ -38,18 +39,21 @@ FuFile是一款开源的大规模分布式存储系统，可作为文件系统�
 
 ## 开发计划
 
-|Feature|Date|
-|:-:|:-:|
-|rpc||
-|name-server: raft||
-|name-server: dir tree&persistence||
-|message code generate||
-|data-server: PacificA||
-|data-server: Quorum NRW||
-|data-server: file transfer&persistence||
-|name-server-multi-raft||
-|compute-server: analysis&compute||
-
+|Version|Feature|Date|
+|:-:|:-:|:-:|
+|v1|rpc base on jdk||
+|v1|name-server: raft||
+|v1|name-server: dir tree&persistence||
+|v1|message code generate||
+|v1|memory pool||
+|v1|time wheel||
+|v1|data-server: PacificA||
+|v1|data-server: Quorum NRW||
+|v1|data-server: file transfer&persistence||
+|v1|name-server: multi-raft (maybe)||
+|v2|compute-server: analysis&compute||
+|v2|grpc||
+|v2|rpc base on netty (maybe)||
 ## 贡献
 
 您好，目前项目处于初期，正在全力开发中，感谢关注！
