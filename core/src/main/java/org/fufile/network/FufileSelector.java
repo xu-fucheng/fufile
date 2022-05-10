@@ -80,6 +80,7 @@ public abstract class FufileSelector {
             try {
                 pollSelectionKey(key);
             } catch (IOException e) {
+                logger.error(e.getMessage(), e);
                 // read -1: Because opposite terminal close the channel, so we close the channel.
                 // rst: Because opposite terminal close the jvm, so we close the channel.
                 ((FufileChannel) key.attachment()).close();

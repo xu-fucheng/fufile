@@ -108,6 +108,7 @@ public class SocketSelector extends FufileSelector implements SocketSelectable {
         boolean isSuccess = newConnections.offer(channel);
         if (isSuccess) {
             channel.register(selector, 0);
+            logger.info("Accept new connection from {}", channel.channel().socket().getRemoteSocketAddress());
         }
         return isSuccess;
     }
@@ -117,11 +118,7 @@ public class SocketSelector extends FufileSelector implements SocketSelectable {
         while (!newConnections.isEmpty() && connectionsRegistered < connectionQueueSize) {
             connectionsRegistered++;
             FufileSocketChannel channel = newConnections.poll();
-            if (connectedChannels.containsKey(channel.getChannelId())) {
-                channel.close();
-                logger.error("There is already a connection for channelId " + channel.getChannelId());
-                continue;
-            }
+
             channel.interestOps(SelectionKey.OP_READ);
             connectedChannels.put(channel.getChannelId(), channel);
         }

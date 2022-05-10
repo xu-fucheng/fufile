@@ -60,7 +60,7 @@ public class SocketServer implements Runnable {
             for (; ; ) {
                 try {
 
-                    socketSelector.doPool(500);
+                    socketSelector.doPool(100);
                     socketSelector.registerNewConnections();
                     // write read
 

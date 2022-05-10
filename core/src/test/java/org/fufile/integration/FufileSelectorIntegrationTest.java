@@ -59,5 +59,33 @@ public class FufileSelectorIntegrationTest {
         Thread.sleep(10000);
     }
 
+//    @Test
+    public void client() throws IOException {
+        SocketSelector socketSelector = new SocketSelector();
+        socketSelector.connect("", new InetSocketAddress("localhost", 9999));
+
+        socketSelector.doPool(0);
+        socketSelector.registerNewConnections();
+
+        for (;;) {
+            socketSelector.doPool(0);
+        }
+
+//        socketSelector.send(new Sender("", new TestStringMessage("100")));
+//        socketSelector.doPool(0);
+//        socketSelector.send(new Sender("", new TestStringMessage("100")));
+//        socketSelector.doPool(0);
+    }
+
+//    @Test
+    public void server() throws Exception {
+        ServerSocketSelectable serverSocketSelectable = new ServerSocketSelector(new InetSocketAddress(9999));
+        serverSocketSelectable.doPool(0);
+        FufileSocketChannel channel = serverSocketSelectable.getNewConnections().iterator().next();
+
+        Thread.sleep(3000);
+    }
+
+
 
 }

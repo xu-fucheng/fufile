@@ -18,11 +18,13 @@ package org.fufile.server;
 
 import org.fufile.network.FufileSocketChannel;
 import org.fufile.network.ServerSocketSelector;
+import org.fufile.utils.FufileThread;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -39,27 +41,58 @@ public class FufileRaftServer implements Runnable {
     private static final int SOCKET_PROCESS_THREAD_NUM;
     private int index;
     private ServerSocketSelector serverSocketSelector;
-    private List<String> remoteAddresses;
+    private List<ServerNode> nodes;
+    private List<ServerNode> needConnect;
     private List<InetSocketAddress> disconnected;
     private List<String> connecting;
     private Map<String, FufileSocketChannel> connectedChannels;
+    private ServerNode localNode;
+    /**
+     * node状态
+     * 1、follow
+     * 2、candidate
+     * 3、lead
+     */
+    private int quorumState;
+
+    public FufileRaftServer(InetSocketAddress localAddress) throws IOException {
+        needConnect = new ArrayList<>();
+        connectedChannels = new ConcurrentHashMap<>();
+        serverSocketSelector = new ServerSocketSelector(localAddress);
+        socketServers = new SocketServer[SOCKET_PROCESS_THREAD_NUM];
+        for (int i = 0; i < socketServers.length; i++) {
+            socketServers[i] = new SocketServer(connectedChannels);
+        }
+    }
 
     static {
         SOCKET_PROCESS_THREAD_NUM = Math.max(1, Runtime.getRuntime().availableProcessors() * 2);
     }
 
+//    public FufileRaftServer(InetSocketAddress localAddress) throws IOException {
+//        this(localAddress);
+//    }
 
-    public FufileRaftServer(InetSocketAddress socketAddress, List<String> remoteAddresses) throws IOException {
-        serverSocketSelector = new ServerSocketSelector(socketAddress);
-        this.remoteAddresses = remoteAddresses;
-        connectedChannels = new ConcurrentHashMap<>();
-        socketServers = new SocketServer[SOCKET_PROCESS_THREAD_NUM];
-        for (SocketServer socketServer : socketServers) {
-            socketServer = new SocketServer(connectedChannels);
-        }
+    public FufileRaftServer(int nodeId, InetSocketAddress localAddress, List<ServerNode> nodes) throws IOException {
+        this(localAddress);
+        this.nodes = nodes;
+        filterConnect(nodeId, nodes);
         connect();
-        for (SocketServer socketServer : socketServers) {
-            socketServer.run();
+    }
+
+    public void configNodes(int nodeId, List<ServerNode> nodes) {
+        filterConnect(nodeId, nodes);
+        connect();
+    }
+
+    public void filterConnect(int nodeId, List<ServerNode> nodes) {
+        for (ServerNode serverNode : nodes) {
+            if (serverNode.getId() < nodeId) {
+                needConnect.add(serverNode);
+            }
+            if (serverNode.getId() == nodeId) {
+                localNode = serverNode;
+            }
         }
     }
 
@@ -70,7 +103,9 @@ public class FufileRaftServer implements Runnable {
     public void run() {
         // 处理新connections
         // 分配新connections
-
+        for (SocketServer socketServer : socketServers) {
+            new FufileThread(socketServer).start();
+        }
 
         for (; ; ) {
             // 连接：未连接的
@@ -106,10 +141,13 @@ public class FufileRaftServer implements Runnable {
 
     public void connect() {
 
-        disconnected.forEach(address -> {
+        needConnect.forEach(node -> {
             SocketServer socketServer = socketServers[Math.abs(index++) % socketServers.length];
-            socketServer.allocateConnections(address);
+            socketServer.allocateConnections(new InetSocketAddress(node.getHostname(), node.getPort()));
         });
+    }
 
+    public int getPort() {
+        return serverSocketSelector.getFufileServerSocketChannel().getLocalPort();
     }
 }
