@@ -18,6 +18,8 @@ package org.fufile.server;
 
 import org.fufile.network.FufileSocketChannel;
 import org.fufile.network.SocketSelector;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -30,30 +32,32 @@ import java.util.concurrent.LinkedBlockingQueue;
  */
 public class SocketServer implements Runnable {
 
+    private static final Logger logger = LoggerFactory.getLogger(SocketServer.class);
+
     private SocketSelector socketSelector;
-    private Queue<InetSocketAddress> remoteAddresses;
+    private Queue<ServerNode> remoteNodes;
     private Map<String, FufileSocketChannel> connectedChannels;
 
     public SocketServer(Map<String, FufileSocketChannel> connectedChannels) {
         this.socketSelector = new SocketSelector(connectedChannels);
-        remoteAddresses = new LinkedBlockingQueue();
+        remoteNodes = new LinkedBlockingQueue();
     }
 
     public boolean allocateNewConnections(FufileSocketChannel channel) throws IOException {
         return socketSelector.allocateNewConnections(channel);
     }
 
-    public boolean allocateConnections(InetSocketAddress address) {
-        return remoteAddresses.offer(address);
+    public boolean allocateConnections(ServerNode node) {
+        return remoteNodes.offer(node);
     }
 
     @Override
     public void run() {
         // connect
         try {
-            while (!remoteAddresses.isEmpty()) {
-                InetSocketAddress address = remoteAddresses.poll();
-                socketSelector.connect(address.getHostName(), address);
+            while (!remoteNodes.isEmpty()) {
+                ServerNode node = remoteNodes.poll();
+                socketSelector.connect(node.getIdString(), new InetSocketAddress(node.getHostname(), node.getPort()));
             }
 
 
@@ -71,7 +75,7 @@ public class SocketServer implements Runnable {
             }
 
         } catch (Exception e) {
-
+            logger.error(e.getMessage(), e);
         }
 
     }

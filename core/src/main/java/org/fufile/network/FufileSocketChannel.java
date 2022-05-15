@@ -85,7 +85,9 @@ public class FufileSocketChannel extends FufileChannel {
     }
 
     public void register(Selector sel, int ops) throws IOException {
-        selectionKey = channel.register(sel, ops, this);
+        if (!channel.isRegistered()) {
+            selectionKey = channel.register(sel, ops, this);
+        }
     }
 
     private boolean readRequestBytes() throws IOException {

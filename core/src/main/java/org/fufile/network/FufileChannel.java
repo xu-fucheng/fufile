@@ -25,12 +25,12 @@ import java.nio.channels.SelectionKey;
  */
 public abstract class FufileChannel {
 
-    private final String channelId;
+    private final String nodeId;
     protected SelectionKey selectionKey;
     protected final SelectableChannel channel;
 
-    public FufileChannel(String channelId, SelectableChannel channel) {
-        this.channelId = channelId;
+    public FufileChannel(String nodeId, SelectableChannel channel) {
+        this.nodeId = nodeId;
         this.channel = channel;
     }
 
@@ -38,8 +38,8 @@ public abstract class FufileChannel {
         return channel;
     }
 
-    public String getChannelId() {
-        return channelId;
+    public String getNodeId() {
+        return nodeId;
     }
 
     public void addInterestOps(int ops) {

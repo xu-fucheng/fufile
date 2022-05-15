@@ -69,6 +69,7 @@ public abstract class FufileSelector {
     }
 
     protected boolean doConnect(SocketChannel channel, InetSocketAddress address) throws IOException {
+        logger.info("connect " + address);
         return channel.connect(address);
     }
 

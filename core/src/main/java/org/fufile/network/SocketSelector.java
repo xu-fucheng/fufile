@@ -54,31 +54,31 @@ public class SocketSelector extends FufileSelector implements SocketSelectable {
     }
 
     @Override
-    public void connect(String channelId, InetSocketAddress address) throws IOException {
-        if (connectedChannels.containsKey(channelId)) {
-            logger.error("There is already a connection for channelId " + channelId);
-            return;
-        }
+    public void connect(String nodeId, InetSocketAddress address) throws IOException {
+//        if (connectedChannels.containsKey(channelId)) {
+//            logger.error("There is already a connection for channelId " + channelId);
+//            return;
+//        }
         SocketChannel socketChannel = SocketChannel.open();
         boolean connected = false;
         try {
             configureSocket(socketChannel);
             connected = doConnect(socketChannel, address);
             if (connected) {
-                FufileSocketChannel channel = new FufileSocketChannel(channelId, socketChannel);
+                FufileSocketChannel channel = new FufileSocketChannel(nodeId, socketChannel);
                 channel.register(selector, SelectionKey.OP_READ);
-                if (connectedChannels.containsKey(channelId)) {
-                    logger.error("There is already a connection for channelId " + channelId);
-                    return;
-                }
-                connectedChannels.put(channelId, channel);
+//                if (connectedChannels.containsKey(channelId)) {
+//                    logger.error("There is already a connection for channelId " + channelId);
+//                    return;
+//                }
+                connectedChannels.put(nodeId, channel);
             } else {
-                FufileSocketChannel channel = new FufileSocketChannel(channelId, socketChannel);
+                FufileSocketChannel channel = new FufileSocketChannel(nodeId, socketChannel);
                 channel.register(selector, SelectionKey.OP_CONNECT);
             }
         } catch (Exception e) {
             if (connected) {
-                connectedChannels.remove(channelId);
+                connectedChannels.remove(nodeId);
             }
             socketChannel.close();
             throw e;
@@ -105,9 +105,9 @@ public class SocketSelector extends FufileSelector implements SocketSelectable {
     }
 
     public boolean allocateNewConnections(FufileSocketChannel channel) throws IOException {
+        channel.register(selector, 0);
         boolean isSuccess = newConnections.offer(channel);
         if (isSuccess) {
-            channel.register(selector, 0);
             logger.info("Accept new connection from {}", channel.channel().socket().getRemoteSocketAddress());
         }
         return isSuccess;
@@ -118,9 +118,8 @@ public class SocketSelector extends FufileSelector implements SocketSelectable {
         while (!newConnections.isEmpty() && connectionsRegistered < connectionQueueSize) {
             connectionsRegistered++;
             FufileSocketChannel channel = newConnections.poll();
-
             channel.interestOps(SelectionKey.OP_READ);
-            connectedChannels.put(channel.getChannelId(), channel);
+            connectedChannels.put(channel.getNodeId(), channel);
         }
     }
 
@@ -142,7 +141,7 @@ public class SocketSelector extends FufileSelector implements SocketSelectable {
         if (key.isReadable()) {
             FufileSocketChannel fufileSocketChannel = (FufileSocketChannel) key.attachment();
             if (fufileSocketChannel.read()) {
-                receivedChannels.put(fufileSocketChannel.getChannelId(), fufileSocketChannel);
+                receivedChannels.put(fufileSocketChannel.getNodeId(), fufileSocketChannel);
             }
         }
     }

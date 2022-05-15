@@ -18,36 +18,78 @@ package org.fufile.integration;
 
 import org.fufile.server.FufileRaftServer;
 import org.fufile.server.ServerNode;
-import org.junit.jupiter.api.Test;
+import org.fufile.utils.FufileThread;
+import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.CountDownLatch;
+import java.util.stream.IntStream;
 
 public class FufileRaftServerIntegrationTest {
 
+    private static final Logger logger = LoggerFactory.getLogger(FufileRaftServerIntegrationTest.class);
+
     /**
+     * test cluster connection
      * three nodes
      */
-    @Test
-    public void test() throws Exception {
-        FufileRaftServer server1 = new FufileRaftServer(new InetSocketAddress(0));
-        FufileRaftServer server2 = new FufileRaftServer(new InetSocketAddress(0));
-        FufileRaftServer server3 = new FufileRaftServer(new InetSocketAddress(0));
-        ServerNode node1 = new ServerNode(1, "localhost", server1.getPort());
-        ServerNode node2 = new ServerNode(2, "localhost", server2.getPort());
-        ServerNode node3 = new ServerNode(3, "localhost", server3.getPort());
+    @ParameterizedTest
+    @MethodSource("rangeClusterNum")
+    @Timeout(60)
+    public void testClusterConnect(int num) throws Exception {
+        List<FufileRaftServer> servers = new ArrayList<>();
         List<ServerNode> nodes = new ArrayList<>();
-        nodes.add(node1);
-        nodes.add(node2);
-        nodes.add(node3);
-        server1.configNodes(1, nodes);
-        server1.configNodes(2, nodes);
-        server3.configNodes(3, nodes);
+        CountDownLatch latch = new CountDownLatch(num);
+        for (int i = 0; i < num; i++) {
+            FufileRaftServer server = new TestRaftServer(new InetSocketAddress(0), latch, num);
+            servers.add(server);
+            ServerNode node = new ServerNode(i, "localhost", server.getPort());
+            nodes.add(node);
+        }
+        for (int i = 0; i < num; i++) {
+            servers.get(i).configNodes(i, nodes);
+            new FufileThread(servers.get(i), "raft thread -" + i).start();
+        }
 
+        latch.await();
 
-        Thread.sleep(3000);
 
     }
+
+    static IntStream rangeClusterNum() {
+        return IntStream.range(3, 4);
+    }
+
+    private class TestRaftServer extends FufileRaftServer {
+
+        private final int clusterNum;
+        private final Logger logger = LoggerFactory.getLogger(TestRaftServer.class);
+        private final CountDownLatch latch;
+        private boolean countDown = false;
+
+        public TestRaftServer(InetSocketAddress localAddress, CountDownLatch latch, int clusterNum) throws IOException {
+            super(localAddress);
+            this.latch = latch;
+            this.clusterNum = clusterNum;
+        }
+
+        protected void checkConnection() {
+            Set connectedNodes = connectedChannels.keySet();
+            logger.info(connectedNodes.toString());
+            if (!countDown && connectedNodes.size() == clusterNum - 1) {
+                latch.countDown();
+                countDown = true;
+            }
+        }
+    }
+
 
 }

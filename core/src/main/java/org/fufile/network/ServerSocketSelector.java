@@ -16,6 +16,9 @@
 
 package org.fufile.network;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.channels.SelectionKey;
@@ -30,6 +33,8 @@ import java.util.List;
  * 将SocketSelector和ServerSocketSelector解耦
  */
 public class ServerSocketSelector extends FufileSelector implements ServerSocketSelectable {
+
+    private static final Logger logger = LoggerFactory.getLogger(ServerSocketSelector.class);
 
     private ArrayList newConnections;
     private final int maxConnectionsPerSelect = 8;
@@ -65,6 +70,7 @@ public class ServerSocketSelector extends FufileSelector implements ServerSocket
         ServerSocketChannel serverSocketChannel = ServerSocketChannel.open();
         channel = new FufileServerSocketChannel("", serverSocketChannel);
         serverSocketChannel.configureBlocking(false);
+        logger.info("bind " + address.toString());
         serverSocketChannel.socket().bind(address);
         serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
     }

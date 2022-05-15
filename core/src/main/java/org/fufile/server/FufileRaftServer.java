@@ -35,18 +35,21 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class FufileRaftServer implements Runnable {
 
-    private final static Logger logger = LoggerFactory.getLogger(FufileRaftServer.class);
+    private static final Logger logger = LoggerFactory.getLogger(FufileRaftServer.class);
 
+    private static final int SOCKET_PROCESS_THREAD_NUM = Math.max(1, Runtime.getRuntime().availableProcessors() * 2);
     private SocketServer[] socketServers;
-    private static final int SOCKET_PROCESS_THREAD_NUM;
     private int index;
     private ServerSocketSelector serverSocketSelector;
     private List<ServerNode> nodes;
+    protected List<ServerNode> remoteNodes;
     private List<ServerNode> needConnect;
+    private List<ServerNode> acceptNode;
     private List<InetSocketAddress> disconnected;
     private List<String> connecting;
-    private Map<String, FufileSocketChannel> connectedChannels;
+    protected Map<String, FufileSocketChannel> connectedChannels;
     private ServerNode localNode;
+    private volatile boolean running;
     /**
      * node状态
      * 1、follow
@@ -57,6 +60,8 @@ public class FufileRaftServer implements Runnable {
 
     public FufileRaftServer(InetSocketAddress localAddress) throws IOException {
         needConnect = new ArrayList<>();
+        acceptNode = new ArrayList<>();
+        remoteNodes = new ArrayList<>();
         connectedChannels = new ConcurrentHashMap<>();
         serverSocketSelector = new ServerSocketSelector(localAddress);
         socketServers = new SocketServer[SOCKET_PROCESS_THREAD_NUM];
@@ -65,22 +70,13 @@ public class FufileRaftServer implements Runnable {
         }
     }
 
-    static {
-        SOCKET_PROCESS_THREAD_NUM = Math.max(1, Runtime.getRuntime().availableProcessors() * 2);
-    }
-
-//    public FufileRaftServer(InetSocketAddress localAddress) throws IOException {
-//        this(localAddress);
-//    }
-
     public FufileRaftServer(int nodeId, InetSocketAddress localAddress, List<ServerNode> nodes) throws IOException {
         this(localAddress);
-        this.nodes = nodes;
-        filterConnect(nodeId, nodes);
-        connect();
+        configNodes(nodeId, nodes);
     }
 
     public void configNodes(int nodeId, List<ServerNode> nodes) {
+        this.nodes = nodes;
         filterConnect(nodeId, nodes);
         connect();
     }
@@ -92,6 +88,8 @@ public class FufileRaftServer implements Runnable {
             }
             if (serverNode.getId() == nodeId) {
                 localNode = serverNode;
+            } else {
+                remoteNodes.add(serverNode);
             }
         }
     }
@@ -101,14 +99,21 @@ public class FufileRaftServer implements Runnable {
      */
     @Override
     public void run() {
+        running = true;
         // 处理新connections
         // 分配新connections
-        for (SocketServer socketServer : socketServers) {
-            new FufileThread(socketServer).start();
+
+        for (int i = 0; i < socketServers.length; i++) {
+            new FufileThread(socketServers[i], "server -" + localNode.getId() + ". socket server -" + i).start();
         }
 
         for (; ; ) {
             // 连接：未连接的
+            if (!running) {
+                // stop server
+                break;
+            }
+
 
             try {
                 serverSocketSelector.doPool(500);
@@ -129,13 +134,20 @@ public class FufileRaftServer implements Runnable {
                     }
                 }
 
-
-
             } catch (Exception e) {
-
+                logger.error(e.getMessage(), e);
             }
 
+            // countDownLatch
+            checkConnection();
         }
+
+    }
+
+
+
+    protected void checkConnection() {
+
 
     }
 
@@ -143,7 +155,7 @@ public class FufileRaftServer implements Runnable {
 
         needConnect.forEach(node -> {
             SocketServer socketServer = socketServers[Math.abs(index++) % socketServers.length];
-            socketServer.allocateConnections(new InetSocketAddress(node.getHostname(), node.getPort()));
+            socketServer.allocateConnections(node);
         });
     }
 

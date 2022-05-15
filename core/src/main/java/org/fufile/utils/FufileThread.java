@@ -18,7 +18,7 @@ package org.fufile.utils;
 
 public class FufileThread extends Thread {
 
-    public FufileThread(Runnable target) {
-        super(target);
+    public FufileThread(Runnable target, String name) {
+        super(target, name);
     }
 }
