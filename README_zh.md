@@ -47,7 +47,7 @@ FuFile是一款开源的大规模分布式存储系统，可作为大文件或�
 |:-:|:-:|:-:|
 |v1|rpc base on jdk||
 |v1|name-server: raft||
-|v1|name-server: dir tree&persistence||
+|v1|name-server: lsm tree||
 |v1|message code generate||
 |v1|memory pool||
 |v1|time wheel||
