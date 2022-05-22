@@ -67,10 +67,6 @@ public class SocketSelector extends FufileSelector implements SocketSelectable {
             if (connected) {
                 FufileSocketChannel channel = new FufileSocketChannel(nodeId, socketChannel);
                 channel.register(selector, SelectionKey.OP_READ);
-//                if (connectedChannels.containsKey(channelId)) {
-//                    logger.error("There is already a connection for channelId " + channelId);
-//                    return;
-//                }
                 connectedChannels.put(nodeId, channel);
             } else {
                 FufileSocketChannel channel = new FufileSocketChannel(nodeId, socketChannel);

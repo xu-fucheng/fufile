@@ -19,6 +19,7 @@ package org.fufile.server;
 import org.fufile.network.FufileSocketChannel;
 import org.fufile.network.ServerSocketSelector;
 import org.fufile.utils.FufileThread;
+import org.fufile.utils.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,6 +51,23 @@ public class FufileRaftServer implements Runnable {
     protected Map<String, FufileSocketChannel> connectedChannels;
     private ServerNode localNode;
     private volatile boolean running;
+
+
+    // raft related ---------------
+
+    private int currentTerm;
+    private String votedFor;
+    private int commitIndex;
+    private int lastApplied;
+
+    private Timer electionTimeoutTimer;
+    private Timer heartbeatTimer;
+    private long heartbeatInterval = 2 * 1000;
+    private long minElectionTimeout = 10 * 1000;
+    private long maxElectionTimeout = 20 * 1000;
+
+    // -----------------------------
+
     /**
      * node状态
      * 1、follow
@@ -100,6 +118,9 @@ public class FufileRaftServer implements Runnable {
     @Override
     public void run() {
         running = true;
+        electionTimeoutTimer = new Timer(minElectionTimeout);
+        // timeout -> send heartbeat -> reset
+        heartbeatTimer = new Timer(heartbeatInterval);
         // 处理新connections
         // 分配新connections
 
@@ -140,15 +161,29 @@ public class FufileRaftServer implements Runnable {
 
             // countDownLatch
             checkConnection();
+            checkSendHeartbeat();
+            checkElectionTimeout();
         }
 
     }
 
-
-
     protected void checkConnection() {
+    }
+
+    private void checkElectionTimeout() {
+        if (electionTimeoutTimer.timeout()) {
+            // timeout
+
+        }
+    }
+
+    private void checkSendHeartbeat() {
+        if (heartbeatTimer.timeout()) {
+            // send heartbeat
 
 
+            heartbeatTimer.reset();
+        }
     }
 
     public void connect() {

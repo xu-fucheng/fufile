@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 The Fufile Project
+ * Copyright 2022 The Fufile Project
  *
  * The Fufile Project licenses this file to you under the Apache License,
  * version 2.0 (the "License"); you may not use this file except in compliance
@@ -16,5 +16,14 @@
 
 package org.fufile.transfer;
 
-public abstract class RequestMessage {
+import java.nio.ByteBuffer;
+
+public class HeartbeatResponse extends FufileResponse {
+
+    private HeartbeatResponseMessage message = new HeartbeatResponseMessage();
+
+    @Override
+    public ByteBuffer payload() {
+        return null;
+    }
 }

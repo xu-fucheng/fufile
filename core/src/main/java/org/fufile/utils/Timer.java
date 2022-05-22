@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 The Fufile Project
+ * Copyright 2022 The Fufile Project
  *
  * The Fufile Project licenses this file to you under the Apache License,
  * version 2.0 (the "License"); you may not use this file except in compliance
@@ -14,16 +14,27 @@
  * under the License.
  */
 
-package org.fufile.transfer;
+package org.fufile.utils;
 
-import java.io.UnsupportedEncodingException;
-import java.nio.ByteBuffer;
+public class Timer {
 
-/**
- */
-public interface FufileMessage {
+    private final long timeout;
+    private long initTime;
 
-    ByteBuffer serialize();
+    public Timer(long timeout) {
+        this.timeout = timeout;
+        this.initTime = System.currentTimeMillis();
+    }
 
-    void deserialize() throws UnsupportedEncodingException;
+    public void reset() {
+        this.initTime = System.currentTimeMillis();
+    }
+
+    public boolean timeout() {
+        if (timeout + initTime < System.currentTimeMillis()) {
+            return true;
+        }
+        return false;
+    }
+
 }

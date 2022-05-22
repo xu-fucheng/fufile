@@ -16,14 +16,5 @@
 
 package org.fufile.transfer;
 
-import java.io.UnsupportedEncodingException;
-import java.nio.ByteBuffer;
-
-/**
- */
-public interface FufileMessage {
-
-    ByteBuffer serialize();
-
-    void deserialize() throws UnsupportedEncodingException;
+public abstract class FufileRequest implements FufileTransfer {
 }

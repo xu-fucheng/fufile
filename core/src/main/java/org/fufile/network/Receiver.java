@@ -16,26 +16,30 @@
 
 package org.fufile.network;
 
-import org.fufile.transfer.FufileTransfer;
+import org.fufile.transfer.FufileMessage;
 import org.fufile.transfer.TestStringMessage;
 
 import java.nio.ByteBuffer;
 
+/**
+ *
+ */
 public class Receiver {
 
     private ByteBuffer payload;
-    private FufileTransfer transfer;
+    private FufileMessage message;
 
     public Receiver(ByteBuffer payload) {
         this.payload = payload;
-        transfer = new TestStringMessage(payload);
+        message = new TestStringMessage(payload);
     }
 
     public void parse() {
 
+        payload.slice();
     }
 
-    public FufileTransfer getMessage() {
-        return transfer;
+    public FufileMessage getMessage() {
+        return message;
     }
 }

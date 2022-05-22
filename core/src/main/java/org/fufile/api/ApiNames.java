@@ -16,16 +16,48 @@
 
 package org.fufile.api;
 
+import org.fufile.transfer.FufileTransfer;
+import org.fufile.transfer.HeartbeatRequest;
+import org.fufile.transfer.HeartbeatResponse;
+import org.fufile.transfer.TestStringTransfer;
+import org.fufile.transfer.VoteRequest;
+import org.fufile.transfer.VoteResponse;
+
+import java.util.Arrays;
+import java.util.Map;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
+
 public enum ApiNames {
 
-    HEARTBEAT(0, "Heartbeat");
+    TEST((short) -1, "test", () -> new TestStringTransfer(), () -> new TestStringTransfer()),
+    HEARTBEAT((short) 0, "Heartbeat", () -> new HeartbeatRequest(), () -> new HeartbeatResponse()),
+    VOTE((short) 1, "Vote", () -> new VoteRequest(), () -> new VoteResponse());
 
     public final short id;
     public final String name;
+    public final Supplier<FufileTransfer> request;
+    public final Supplier<FufileTransfer> response;
 
-    ApiNames(int id, String name) {
-        this.id = (short) id;
+    private static final Map<Short, ApiNames> API_MAP = Arrays.stream(ApiNames.values())
+            .collect(Collectors.toMap(api -> api.id, api -> api));
+
+    ApiNames(short id, String name, Supplier<FufileTransfer> request, Supplier<FufileTransfer> response) {
+        this.id = id;
         this.name = name;
+        this.request = request;
+        this.response = response;
     }
 
+    public FufileTransfer getRequest() {
+        return request.get();
+    }
+
+    public FufileTransfer getResponse() {
+        return response.get();
+    }
+
+    public static final ApiNames getApi(short id) {
+        return API_MAP.get(id);
+    }
 }

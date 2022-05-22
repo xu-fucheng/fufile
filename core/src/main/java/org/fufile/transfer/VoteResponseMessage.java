@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 The Fufile Project
+ * Copyright 2022 The Fufile Project
  *
  * The Fufile Project licenses this file to you under the Apache License,
  * version 2.0 (the "License"); you may not use this file except in compliance
@@ -19,11 +19,14 @@ package org.fufile.transfer;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 
-/**
- */
-public interface FufileMessage {
+public class VoteResponseMessage implements FufileMessage {
+    @Override
+    public ByteBuffer serialize() {
+        return null;
+    }
 
-    ByteBuffer serialize();
+    @Override
+    public void deserialize() throws UnsupportedEncodingException {
 
-    void deserialize() throws UnsupportedEncodingException;
+    }
 }

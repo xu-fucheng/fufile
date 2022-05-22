@@ -20,7 +20,7 @@ import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 
-public class TestStringMessage implements FufileTransfer {
+public class TestStringMessage implements FufileMessage {
 
     private String message;
     private ByteBuffer payload;
