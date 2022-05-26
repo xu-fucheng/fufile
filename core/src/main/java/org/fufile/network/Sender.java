@@ -16,7 +16,7 @@
 
 package org.fufile.network;
 
-import org.fufile.transfer.FufileMessage;
+import org.fufile.transfer.FufileTransfer;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -27,17 +27,17 @@ public class Sender {
     private final String channelId;
 
     /**
-     * Request 或者 Response
+     *
      */
-    private final FufileMessage fufileMessage;
+    private final FufileTransfer transfer;
 
     private final ByteBuffer payload;
 
     public Sender(String channelId,
-                  FufileMessage fufileMessage) {
+                  FufileTransfer transfer) {
         this.channelId = channelId;
-        this.fufileMessage = fufileMessage;
-        payload = fufileMessage.serialize();
+        this.transfer = transfer;
+        payload = transfer.payload();
     }
 
     public boolean toWrite(SocketChannel socketChannel) throws IOException {

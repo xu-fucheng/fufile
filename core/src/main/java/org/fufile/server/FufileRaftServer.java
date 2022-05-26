@@ -38,7 +38,7 @@ public class FufileRaftServer implements Runnable {
 
     private static final Logger logger = LoggerFactory.getLogger(FufileRaftServer.class);
 
-    private static final int SOCKET_PROCESS_THREAD_NUM = Math.max(1, Runtime.getRuntime().availableProcessors() * 2);
+    private static final int SOCKET_PROCESS_THREAD_NUM = 2;
     private SocketServer[] socketServers;
     private int index;
     private ServerSocketSelector serverSocketSelector;
@@ -69,10 +69,7 @@ public class FufileRaftServer implements Runnable {
     // -----------------------------
 
     /**
-     * node状态
-     * 1、follow
-     * 2、candidate
-     * 3、lead
+     *
      */
     private int quorumState;
 
@@ -121,15 +118,15 @@ public class FufileRaftServer implements Runnable {
         electionTimeoutTimer = new Timer(minElectionTimeout);
         // timeout -> send heartbeat -> reset
         heartbeatTimer = new Timer(heartbeatInterval);
-        // 处理新connections
-        // 分配新connections
+        // handle new connections
+        // assign connections
 
         for (int i = 0; i < socketServers.length; i++) {
             new FufileThread(socketServers[i], "server -" + localNode.getId() + ". socket server -" + i).start();
         }
 
         for (; ; ) {
-            // 连接：未连接的
+
             if (!running) {
                 // stop server
                 break;
@@ -178,6 +175,7 @@ public class FufileRaftServer implements Runnable {
     }
 
     private void checkSendHeartbeat() {
+        // per connect
         if (heartbeatTimer.timeout()) {
             // send heartbeat
 

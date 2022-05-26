@@ -20,7 +20,12 @@ import java.nio.ByteBuffer;
 
 public class VoteRequest extends FufileRequest {
 
+    private ByteBuffer payload;
     private VoteRequestMessage message = new VoteRequestMessage();
+
+    public VoteRequest(ByteBuffer payload) {
+        this.payload = payload;
+    }
 
     @Override
     public ByteBuffer payload() {

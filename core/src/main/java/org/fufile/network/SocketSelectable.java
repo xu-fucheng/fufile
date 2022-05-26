@@ -25,7 +25,7 @@ public interface SocketSelectable extends Selectable {
     /**
      * Connect to the specified address, and identifying the connection with a unique ID.
      * If the connection is established immediately, the channel will be registered as
-     * read key，otherwise registered as connect key.
+     * read key, otherwise registered as connect key.
      * @param channelId Identifies the unique ID of this connection
      * @param address The address to connect to
      */

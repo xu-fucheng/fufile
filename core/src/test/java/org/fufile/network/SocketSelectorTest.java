@@ -16,8 +16,8 @@
 
 package org.fufile.network;
 
+import org.fufile.transfer.TestStringTransfer;
 import org.fufile.utils.EchoServer;
-import org.fufile.transfer.TestStringMessage;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -68,16 +68,15 @@ public class SocketSelectorTest {
             selectable.registerNewConnections();
         }
         for (int i = 0; i < connectionsNumber; i++) {
-            selectable.send(new Sender(Integer.toString(i), new TestStringMessage("number:0")));
+            selectable.send(new Sender(Integer.toString(i), new TestStringTransfer("number:0")));
         }
         while (!Arrays.stream(receiveCount).allMatch(count -> count == sendNumber)) {
             selectable.doPool(500);
             Iterator<FufileSocketChannel> iterator = selectable.getReceive().iterator();
             while (iterator.hasNext()) {
                 FufileSocketChannel channel = iterator.next();
-                TestStringMessage message = (TestStringMessage) channel.getReceiver().getMessage();
-                message.deserialize();
-                String[] messageArray = message.getMessage().split(":");
+                TestStringTransfer transfer = (TestStringTransfer) channel.getReceiver().getTransfer();
+                String[] messageArray = transfer.message().split(":");
                 Assertions.assertEquals("number", messageArray[0]);
                 Integer number = Integer.parseInt(messageArray[1]);
                 int channelId = Integer.parseInt(channel.getNodeId());
@@ -85,7 +84,7 @@ public class SocketSelectorTest {
                 Assertions.assertEquals(receivedNumber, number);
                 receiveCount[channelId] = receivedNumber + 1;
                 if (receiveCount[channelId] != sendNumber) {
-                    selectable.send(new Sender(channel.getNodeId(), new TestStringMessage("number:" + receiveCount[channelId])));
+                    selectable.send(new Sender(channel.getNodeId(), new TestStringTransfer("number:" + receiveCount[channelId])));
                 }
                 iterator.remove();
             }
@@ -103,15 +102,14 @@ public class SocketSelectorTest {
         selectable.connect("1", addr);
         selectable.doPool(0);
         selectable.registerNewConnections();
-        selectable.send(new Sender("1", new TestStringMessage(data)));
+        selectable.send(new Sender("1", new TestStringTransfer(data)));
         String receive;
         while (true) {
             selectable.doPool(0);
             if (!selectable.getReceive().isEmpty()) {
-                TestStringMessage message = (TestStringMessage) selectable.getReceive().toArray(
-                        new FufileSocketChannel[0])[0].getReceiver().getMessage();
-                message.deserialize();
-                receive = message.getMessage();
+                TestStringTransfer transfer = (TestStringTransfer) selectable.getReceive().toArray(
+                        new FufileSocketChannel[0])[0].getReceiver().getTransfer();
+                receive = transfer.message();
                 break;
             }
         }

@@ -28,9 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * SocketSelector外面包一层
- * ServerSocketSelector外面也包一层
- * 将SocketSelector和ServerSocketSelector解耦
+ *
  */
 public class ServerSocketSelector extends FufileSelector implements ServerSocketSelectable {
 

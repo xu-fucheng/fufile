@@ -20,7 +20,13 @@ import java.nio.ByteBuffer;
 
 public class HeartbeatResponse extends FufileResponse {
 
+    private ByteBuffer payload;
+
     private HeartbeatResponseMessage message = new HeartbeatResponseMessage();
+
+    public HeartbeatResponse(ByteBuffer payload) {
+        this.payload = payload;
+    }
 
     @Override
     public ByteBuffer payload() {

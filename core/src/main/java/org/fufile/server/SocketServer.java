@@ -69,6 +69,13 @@ public class SocketServer implements Runnable {
                     // write read
 
 
+                    // get receives
+
+
+                    // heartbeat timeout
+                    // If leader's connection election timeout, notify FufileRaftServer to launch election.
+
+
                 } catch (IOException e) {
                     e.printStackTrace();
                 }

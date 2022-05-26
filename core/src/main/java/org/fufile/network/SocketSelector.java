@@ -83,13 +83,10 @@ public class SocketSelector extends FufileSelector implements SocketSelectable {
 
 
     /**
-     * 这地方应该传入ByteBuffer的包装类
-     * Request和Response
-     * 要知道
+     *
      */
     @Override
     public void send(Sender sender) {
-        // 先连接再发送数据，应该判断是否连接
         FufileSocketChannel socketChannel = connectedChannels.get(sender.getChannelId());
         socketChannel.addSender(sender);
         socketChannel.addInterestOps(SelectionKey.OP_WRITE);

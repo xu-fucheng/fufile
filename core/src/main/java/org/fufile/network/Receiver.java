@@ -16,8 +16,10 @@
 
 package org.fufile.network;
 
-import org.fufile.transfer.FufileMessage;
-import org.fufile.transfer.TestStringMessage;
+import org.fufile.api.ApiNames;
+import org.fufile.transfer.FufileTransfer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
 
@@ -26,20 +28,31 @@ import java.nio.ByteBuffer;
  */
 public class Receiver {
 
-    private ByteBuffer payload;
-    private FufileMessage message;
+    private static final Logger logger = LoggerFactory.getLogger(Receiver.class);
+    private static final byte REQUEST = (byte) 0;
+    private static final byte RESPONSE = (byte) 1;
+    private FufileTransfer transfer;
 
     public Receiver(ByteBuffer payload) {
-        this.payload = payload;
-        message = new TestStringMessage(payload);
+        short apiId = payload.getShort();
+        ApiNames api = ApiNames.getApi(apiId);
+        byte messageType = payload.get();
+        if (messageType == REQUEST) {
+            transfer = api.getRequest(payload.slice());
+        } else if (messageType == RESPONSE) {
+            transfer = api.getResponse(payload.slice());
+        } else {
+            throw new RuntimeException();
+        }
     }
+
 
     public void parse() {
 
-        payload.slice();
+
     }
 
-    public FufileMessage getMessage() {
-        return message;
+    public FufileTransfer getTransfer() {
+        return transfer;
     }
 }

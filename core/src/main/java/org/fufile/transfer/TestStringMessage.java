@@ -36,8 +36,10 @@ public class TestStringMessage implements FufileMessage {
     @Override
     public ByteBuffer serialize() {
         byte[] bytes = message.getBytes(Charset.forName("utf-8"));
-        ByteBuffer byteBuffer = ByteBuffer.allocate(bytes.length + 4);
-        byteBuffer.putInt(bytes.length);
+        ByteBuffer byteBuffer = ByteBuffer.allocate(bytes.length + 7);
+        byteBuffer.putInt(bytes.length + 3);
+        byteBuffer.putShort((short) -1);
+        byteBuffer.put((byte) 0);
         byteBuffer.put(bytes);
         byteBuffer.flip();
         return byteBuffer;

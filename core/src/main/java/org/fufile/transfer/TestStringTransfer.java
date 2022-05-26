@@ -16,13 +16,30 @@
 
 package org.fufile.transfer;
 
+import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 
 public class TestStringTransfer implements FufileTransfer {
 
+    private TestStringMessage message;
+
+
+    public TestStringTransfer(ByteBuffer payload) {
+        message = new TestStringMessage(payload);
+    }
+
+    public TestStringTransfer(String message) {
+        this.message = new TestStringMessage(message);
+    }
 
     @Override
     public ByteBuffer payload() {
-        return null;
+        return message.serialize();
     }
+
+    public String message() throws UnsupportedEncodingException {
+        message.deserialize();
+        return message.getMessage();
+    }
+
 }
