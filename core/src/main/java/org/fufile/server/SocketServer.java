@@ -17,12 +17,14 @@
 package org.fufile.server;
 
 import org.fufile.network.FufileSocketChannel;
+import org.fufile.network.Receiver;
 import org.fufile.network.SocketSelector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -67,7 +69,7 @@ public class SocketServer implements Runnable {
                     socketSelector.doPool(100);
                     socketSelector.registerNewConnections();
                     // write read
-
+                    handleReceive();
 
                     // get receives
 
@@ -84,6 +86,26 @@ public class SocketServer implements Runnable {
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
         }
+
+    }
+
+    private void handleReceive() {
+        Collection<FufileSocketChannel> channels = socketSelector.getReceive();
+        for (FufileSocketChannel channel : channels) {
+            Receiver receiver = channel.getReceiver();
+            receiver.getTransfer();
+
+
+        }
+        handleRequest();
+        handleResponse();
+
+    }
+
+    private void handleResponse() {
+    }
+
+    private void handleRequest() {
 
     }
 

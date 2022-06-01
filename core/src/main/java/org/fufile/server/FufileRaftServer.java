@@ -138,6 +138,7 @@ public class FufileRaftServer implements Runnable {
                 Iterator<FufileSocketChannel> iterator = serverSocketSelector.getNewConnections().listIterator();
                 while (iterator.hasNext()) {
                     FufileSocketChannel channel = iterator.next();
+                    // This is an anonymity connection, because we do not know node-id of the client.
                     boolean allocated = false;
                     for (int i = 0; i < socketServers.length; i++) {
                         SocketServer socketServer = socketServers[Math.abs(index++) % socketServers.length];

@@ -97,6 +97,9 @@ public class SocketSelector extends FufileSelector implements SocketSelectable {
         pool(timeout);
     }
 
+    /**
+     * anonymity connection
+     */
     public boolean allocateNewConnections(FufileSocketChannel channel) throws IOException {
         channel.register(selector, 0);
         boolean isSuccess = newConnections.offer(channel);
@@ -112,7 +115,10 @@ public class SocketSelector extends FufileSelector implements SocketSelectable {
             connectionsRegistered++;
             FufileSocketChannel channel = newConnections.poll();
             channel.interestOps(SelectionKey.OP_READ);
-            connectedChannels.put(channel.getNodeId(), channel);
+            if (channel.getNodeId() != null) {
+                // confirm identity
+                connectedChannels.put(channel.getNodeId(), channel);
+            }
         }
     }
 
@@ -134,6 +140,9 @@ public class SocketSelector extends FufileSelector implements SocketSelectable {
         if (key.isReadable()) {
             FufileSocketChannel fufileSocketChannel = (FufileSocketChannel) key.attachment();
             if (fufileSocketChannel.read()) {
+                // read completely
+                fufileSocketChannel.completeRead();
+                // After handle the received message, set interestOps to read.
                 receivedChannels.put(fufileSocketChannel.getNodeId(), fufileSocketChannel);
             }
         }

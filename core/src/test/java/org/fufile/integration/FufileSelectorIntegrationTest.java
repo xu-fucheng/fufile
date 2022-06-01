@@ -22,6 +22,8 @@ import org.fufile.network.ServerSocketSelectable;
 import org.fufile.network.ServerSocketSelector;
 import org.fufile.network.SocketSelector;
 import org.fufile.transfer.TestStringTransfer;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,7 +37,8 @@ public class FufileSelectorIntegrationTest {
 
     private final static Logger logger = LoggerFactory.getLogger(FufileSelectorIntegrationTest.class);
 
-//    @Test
+    @Disabled
+    @Test
     public void test() throws IOException, InterruptedException {
         ServerSocketSelectable serverSocketSelectable = new ServerSocketSelector(new InetSocketAddress(8989));
         int port = serverSocketSelectable.getFufileServerSocketChannel().channel().socket().getLocalPort();
@@ -59,7 +62,8 @@ public class FufileSelectorIntegrationTest {
         Thread.sleep(10000);
     }
 
-//    @Test
+    @Disabled
+    @Test
     public void client() throws IOException {
         SocketSelector socketSelector = new SocketSelector();
         socketSelector.connect("", new InetSocketAddress("localhost", 9999));
@@ -77,7 +81,8 @@ public class FufileSelectorIntegrationTest {
 //        socketSelector.doPool(0);
     }
 
-//    @Test
+    @Disabled
+    @Test
     public void server() throws Exception {
         ServerSocketSelectable serverSocketSelectable = new ServerSocketSelector(new InetSocketAddress(9999));
         serverSocketSelectable.doPool(0);

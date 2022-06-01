@@ -57,7 +57,7 @@ public class ServerSocketSelector extends FufileSelector implements ServerSocket
                 socketChannel.configureBlocking(false);
                 socketChannel.socket().setKeepAlive(true);
                 socketChannel.socket().setTcpNoDelay(true);
-                FufileChannel channel = new FufileSocketChannel(socketChannel.getRemoteAddress().toString(), socketChannel);
+                FufileChannel channel = new FufileSocketChannel(null, socketChannel);
                 newConnections.add(channel);
             }
         }

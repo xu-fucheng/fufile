@@ -19,7 +19,9 @@ package org.fufile.integration;
 import org.fufile.server.FufileRaftServer;
 import org.fufile.server.ServerNode;
 import org.fufile.utils.FufileThread;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.slf4j.Logger;
@@ -33,6 +35,9 @@ import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.stream.IntStream;
 
+import static org.junit.jupiter.api.parallel.ExecutionMode.CONCURRENT;
+
+@Execution(CONCURRENT)
 public class FufileRaftServerIntegrationTest {
 
     private static final Logger logger = LoggerFactory.getLogger(FufileRaftServerIntegrationTest.class);
@@ -41,6 +46,7 @@ public class FufileRaftServerIntegrationTest {
      * test cluster connection
      * three nodes
      */
+    @Disabled
     @ParameterizedTest
     @MethodSource("rangeClusterNum")
     @Timeout(60)

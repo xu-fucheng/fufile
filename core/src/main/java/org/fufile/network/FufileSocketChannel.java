@@ -121,6 +121,10 @@ public class FufileSocketChannel extends FufileChannel {
         selectionKey.interestOps(selectionKey.interestOps() & ~SelectionKey.OP_CONNECT);
     }
 
+    public void completeRead() {
+        selectionKey.interestOps(selectionKey.interestOps() & ~SelectionKey.OP_READ);
+    }
+
     public void interestOps(int ops) {
         selectionKey.interestOps(selectionKey.interestOps() | ops);
     }
@@ -129,9 +133,13 @@ public class FufileSocketChannel extends FufileChannel {
         return (SocketChannel) channel;
     }
 
+    /**
+     * It can be obtained only once.
+     */
     public Receiver getReceiver() {
         Receiver receiver = this.receiver;
         this.receiver = null;
+        interestOps(SelectionKey.OP_READ);
         return receiver;
     }
 }
