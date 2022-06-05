@@ -20,6 +20,13 @@ import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 
 public class VoteRequestMessage implements FufileMessage {
+
+    private ByteBuffer payload;
+
+    public VoteRequestMessage(ByteBuffer payload) {
+        this.payload = payload;
+    }
+
     @Override
     public ByteBuffer serialize() {
         return null;

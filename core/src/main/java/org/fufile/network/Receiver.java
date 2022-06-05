@@ -17,7 +17,7 @@
 package org.fufile.network;
 
 import org.fufile.api.ApiNames;
-import org.fufile.transfer.FufileTransfer;
+import org.fufile.transfer.FufileMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,16 +31,17 @@ public class Receiver {
     private static final Logger logger = LoggerFactory.getLogger(Receiver.class);
     private static final byte REQUEST = (byte) 0;
     private static final byte RESPONSE = (byte) 1;
-    private FufileTransfer transfer;
+    private byte messageType;
+    private FufileMessage message;
 
     public Receiver(ByteBuffer payload) {
         short apiId = payload.getShort();
         ApiNames api = ApiNames.getApi(apiId);
-        byte messageType = payload.get();
+        messageType = payload.get();
         if (messageType == REQUEST) {
-            transfer = api.getRequest(payload.slice());
+            message = api.getRequest(payload.slice());
         } else if (messageType == RESPONSE) {
-            transfer = api.getResponse(payload.slice());
+            message = api.getResponse(payload.slice());
         } else {
             throw new RuntimeException();
         }
@@ -52,7 +53,7 @@ public class Receiver {
 
     }
 
-    public FufileTransfer getTransfer() {
-        return transfer;
+    public FufileMessage message() {
+        return message;
     }
 }

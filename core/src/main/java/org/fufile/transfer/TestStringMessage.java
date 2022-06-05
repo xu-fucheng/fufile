@@ -38,7 +38,9 @@ public class TestStringMessage implements FufileMessage {
         byte[] bytes = message.getBytes(Charset.forName("utf-8"));
         ByteBuffer byteBuffer = ByteBuffer.allocate(bytes.length + 7);
         byteBuffer.putInt(bytes.length + 3);
+        // api
         byteBuffer.putShort((short) -1);
+        // 0:request; 1:response;
         byteBuffer.put((byte) 0);
         byteBuffer.put(bytes);
         byteBuffer.flip();
@@ -52,7 +54,8 @@ public class TestStringMessage implements FufileMessage {
         message = new String(bytes, "utf-8");
     }
 
-    public String getMessage() {
+    public String message() throws UnsupportedEncodingException {
+        deserialize();
         return message;
     }
 }

@@ -21,7 +21,7 @@ import org.fufile.network.Sender;
 import org.fufile.network.ServerSocketSelectable;
 import org.fufile.network.ServerSocketSelector;
 import org.fufile.network.SocketSelector;
-import org.fufile.transfer.TestStringTransfer;
+import org.fufile.transfer.TestStringMessage;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -54,9 +54,9 @@ public class FufileSelectorIntegrationTest {
 
         socketSelector.doPool(0);
         socketSelector.registerNewConnections();
-        socketSelector.send(new Sender("", new TestStringTransfer("100")));
+        socketSelector.send(new Sender("", new TestStringMessage("100")));
         socketSelector.doPool(0);
-        socketSelector.send(new Sender("", new TestStringTransfer("100")));
+        socketSelector.send(new Sender("", new TestStringMessage("100")));
         socketSelector.doPool(0);
         serverSelector.pool(0);
         Thread.sleep(10000);

@@ -14,22 +14,7 @@
  * under the License.
  */
 
-package org.fufile.transfer;
+package org.fufile.utils;
 
-import java.nio.ByteBuffer;
-
-public class HeartbeatRequest extends FufileRequest {
-
-    private ByteBuffer payload;
-    private HeartbeatRequestMessage message = new HeartbeatRequestMessage();
-
-
-    public HeartbeatRequest(ByteBuffer payload) {
-        this.payload = payload;
-    }
-
-    @Override
-    public ByteBuffer payload() {
-        return payload;
-    }
+public class FufileScheduler {
 }

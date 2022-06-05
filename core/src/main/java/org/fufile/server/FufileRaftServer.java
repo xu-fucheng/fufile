@@ -49,6 +49,7 @@ public class FufileRaftServer implements Runnable {
     private List<InetSocketAddress> disconnected;
     private List<String> connecting;
     protected Map<String, FufileSocketChannel> connectedChannels;
+    protected Map<String, FufileSocketChannel> anonymityConnections;
     private ServerNode localNode;
     private volatile boolean running;
 
@@ -78,10 +79,11 @@ public class FufileRaftServer implements Runnable {
         acceptNode = new ArrayList<>();
         remoteNodes = new ArrayList<>();
         connectedChannels = new ConcurrentHashMap<>();
+        anonymityConnections = new ConcurrentHashMap<>();
         serverSocketSelector = new ServerSocketSelector(localAddress);
         socketServers = new SocketServer[SOCKET_PROCESS_THREAD_NUM];
         for (int i = 0; i < socketServers.length; i++) {
-            socketServers[i] = new SocketServer(connectedChannels);
+            socketServers[i] = new SocketServer(connectedChannels, anonymityConnections);
         }
     }
 

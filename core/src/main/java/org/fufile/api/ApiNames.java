@@ -16,12 +16,12 @@
 
 package org.fufile.api;
 
-import org.fufile.transfer.FufileTransfer;
-import org.fufile.transfer.HeartbeatRequest;
-import org.fufile.transfer.HeartbeatResponse;
-import org.fufile.transfer.TestStringTransfer;
-import org.fufile.transfer.VoteRequest;
-import org.fufile.transfer.VoteResponse;
+import org.fufile.transfer.FufileMessage;
+import org.fufile.transfer.HeartbeatRequestMessage;
+import org.fufile.transfer.HeartbeatResponseMessage;
+import org.fufile.transfer.TestStringMessage;
+import org.fufile.transfer.VoteRequestMessage;
+import org.fufile.transfer.VoteResponseMessage;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
@@ -31,30 +31,30 @@ import java.util.stream.Collectors;
 
 public enum ApiNames {
 
-    TEST((short) -1, "test", payload -> new TestStringTransfer(payload), payload -> new TestStringTransfer(payload)),
-    HEARTBEAT((short) 0, "Heartbeat", payload -> new HeartbeatRequest(payload), payload -> new HeartbeatResponse(payload)),
-    VOTE((short) 1, "Vote", payload -> new VoteRequest(payload), payload -> new VoteResponse(payload));
+    TEST((short) -1, "test", payload -> new TestStringMessage(payload), payload -> new TestStringMessage(payload)),
+    HEARTBEAT((short) 0, "Heartbeat", payload -> new HeartbeatRequestMessage(payload), payload -> new HeartbeatResponseMessage(payload)),
+    VOTE((short) 1, "Vote", payload -> new VoteRequestMessage(payload), payload -> new VoteResponseMessage(payload));
 
     public final short id;
     public final String name;
-    public final Function<ByteBuffer, FufileTransfer> request;
-    public final Function<ByteBuffer, FufileTransfer> response;
+    public final Function<ByteBuffer, FufileMessage> request;
+    public final Function<ByteBuffer, FufileMessage> response;
 
     private static final Map<Short, ApiNames> API_MAP = Arrays.stream(ApiNames.values())
             .collect(Collectors.toMap(api -> api.id, api -> api));
 
-    ApiNames(short id, String name, Function<ByteBuffer, FufileTransfer> request, Function<ByteBuffer, FufileTransfer> response) {
+    ApiNames(short id, String name, Function<ByteBuffer, FufileMessage> request, Function<ByteBuffer, FufileMessage> response) {
         this.id = id;
         this.name = name;
         this.request = request;
         this.response = response;
     }
 
-    public FufileTransfer getRequest(ByteBuffer payload) {
+    public FufileMessage getRequest(ByteBuffer payload) {
         return request.apply(payload);
     }
 
-    public FufileTransfer getResponse(ByteBuffer payload) {
+    public FufileMessage getResponse(ByteBuffer payload) {
         return response.apply(payload);
     }
 

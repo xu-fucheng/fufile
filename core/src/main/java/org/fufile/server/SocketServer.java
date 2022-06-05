@@ -40,8 +40,8 @@ public class SocketServer implements Runnable {
     private Queue<ServerNode> remoteNodes;
     private Map<String, FufileSocketChannel> connectedChannels;
 
-    public SocketServer(Map<String, FufileSocketChannel> connectedChannels) {
-        this.socketSelector = new SocketSelector(connectedChannels);
+    public SocketServer(Map<String, FufileSocketChannel> connectedChannels, Map<String, FufileSocketChannel> anonymityConnections) {
+        this.socketSelector = new SocketSelector(connectedChannels, anonymityConnections);
         remoteNodes = new LinkedBlockingQueue();
     }
 
@@ -93,7 +93,7 @@ public class SocketServer implements Runnable {
         Collection<FufileSocketChannel> channels = socketSelector.getReceive();
         for (FufileSocketChannel channel : channels) {
             Receiver receiver = channel.getReceiver();
-            receiver.getTransfer();
+            receiver.message();
 
 
         }

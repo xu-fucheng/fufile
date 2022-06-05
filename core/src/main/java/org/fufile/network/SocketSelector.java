@@ -35,6 +35,7 @@ public class SocketSelector extends FufileSelector implements SocketSelectable {
     private final static Logger logger = LoggerFactory.getLogger(SocketSelector.class);
 
     protected final Map<String, FufileSocketChannel> connectedChannels;
+    protected final Map<String, FufileSocketChannel> anonymityConnections;
     private final LinkedHashMap<String, FufileSocketChannel> receivedChannels;
     private final Queue<FufileSocketChannel> newConnections;
     private final int connectionQueueSize = 16;
@@ -42,13 +43,15 @@ public class SocketSelector extends FufileSelector implements SocketSelectable {
     public SocketSelector() {
         super();
         connectedChannels = new HashMap<>();
+        anonymityConnections = new HashMap<>();
         receivedChannels = new LinkedHashMap<>();
         newConnections = new ArrayBlockingQueue(connectionQueueSize);
     }
 
-    public SocketSelector(Map connectedChannels) {
+    public SocketSelector(Map connectedChannels, Map<String, FufileSocketChannel> anonymityConnections) {
         super();
         this.connectedChannels = connectedChannels;
+        this.anonymityConnections = anonymityConnections;
         receivedChannels = new LinkedHashMap<>();
         newConnections = new ArrayBlockingQueue(connectionQueueSize);
     }
@@ -118,6 +121,11 @@ public class SocketSelector extends FufileSelector implements SocketSelectable {
             if (channel.getNodeId() != null) {
                 // confirm identity
                 connectedChannels.put(channel.getNodeId(), channel);
+                // send heartbeat to identify
+
+
+            } else {
+                anonymityConnections.put(channel.channel().getRemoteAddress().toString(), channel);
             }
         }
     }

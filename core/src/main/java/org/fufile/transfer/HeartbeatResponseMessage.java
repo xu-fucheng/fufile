@@ -21,10 +21,22 @@ import java.nio.ByteBuffer;
 
 public class HeartbeatResponseMessage implements FufileMessage {
 
+    private ByteBuffer payload;
+
+    public HeartbeatResponseMessage(ByteBuffer payload) {
+        this.payload = payload;
+    }
 
     @Override
     public ByteBuffer serialize() {
-        return null;
+        ByteBuffer byteBuffer = ByteBuffer.allocate(7);
+        byteBuffer.putInt(3);
+        // api
+        byteBuffer.putShort((short) 0);
+        // 0:request; 1:response;
+        byteBuffer.put((byte) 0);
+        byteBuffer.flip();
+        return byteBuffer;
     }
 
     @Override

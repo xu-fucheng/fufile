@@ -18,20 +18,47 @@ package org.fufile.transfer;
 
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 
 public class HeartbeatRequestMessage implements FufileMessage {
 
-    private int term;
-    private int nodeId;
-    private int lastIndex;
+    private ByteBuffer payload;
+    private String nodeId;
+
+//    private int lastIndex;
+//    private int term;
+
+
+    public HeartbeatRequestMessage(ByteBuffer payload) {
+        this.payload = payload;
+    }
+
+    public HeartbeatRequestMessage(String nodeId) {
+        this.nodeId = nodeId;
+    }
 
     @Override
     public ByteBuffer serialize() {
-        return null;
+        byte[] bytes = nodeId.getBytes(StandardCharsets.UTF_8);
+        ByteBuffer byteBuffer = ByteBuffer.allocate(bytes.length + 7);
+        byteBuffer.putInt(bytes.length + 3);
+        // api
+        byteBuffer.putShort((short) 0);
+        // 0:request; 1:response;
+        byteBuffer.put((byte) 0);
+        byteBuffer.put(bytes);
+        byteBuffer.flip();
+        return byteBuffer;
     }
 
     @Override
     public void deserialize() throws UnsupportedEncodingException {
+        byte[] bytes = new byte[payload.remaining()];
+        payload.get(bytes);
+        nodeId = new String(bytes, "utf-8");
+    }
 
+    public String nodeId() {
+        return nodeId;
     }
 }

@@ -19,7 +19,6 @@ package org.fufile.integration;
 import org.fufile.server.FufileRaftServer;
 import org.fufile.server.ServerNode;
 import org.fufile.utils.FufileThread;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -46,7 +45,7 @@ public class FufileRaftServerIntegrationTest {
      * test cluster connection
      * three nodes
      */
-    @Disabled
+//    @Disabled
     @ParameterizedTest
     @MethodSource("rangeClusterNum")
     @Timeout(60)
@@ -90,7 +89,7 @@ public class FufileRaftServerIntegrationTest {
         protected void checkConnection() {
             Set connectedNodes = connectedChannels.keySet();
             logger.info(connectedNodes.toString());
-            if (!countDown && connectedNodes.size() == clusterNum - 1) {
+            if (!countDown && connectedChannels.size() + anonymityConnections.size() == clusterNum - 1) {
                 latch.countDown();
                 countDown = true;
             }
