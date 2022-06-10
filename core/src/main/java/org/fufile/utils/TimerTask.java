@@ -16,15 +16,24 @@
 
 package org.fufile.utils;
 
-public class FufileScheduler {
+public abstract class TimerTask implements Runnable {
 
+    private final long delayMs;
+    private long executeMs;
 
+    public TimerTask(long delayMs) {
+        this.delayMs = delayMs;
+    }
 
+    public long getDelayMs() {
+        return delayMs;
+    }
 
+    public long getExecuteMs() {
+        return executeMs;
+    }
 
-
-
-
-
-
+    public void setExecuteMs(long executeMs) {
+        this.executeMs = executeMs;
+    }
 }
