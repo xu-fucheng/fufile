@@ -63,6 +63,7 @@ public class TimerWheel {
             return false;
         }
         // add this wheel
+        task.setExecuteMs(executeMs);
         long index = Math.min((executeMs - startMs) / tickMs, bucketSize - 1);
         LinkedList<TimerTask> bucket = buckets[(int) index];
         synchronized (bucket) {

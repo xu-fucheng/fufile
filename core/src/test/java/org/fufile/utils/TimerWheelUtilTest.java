@@ -17,25 +17,26 @@
 package org.fufile.utils;
 
 import org.junit.jupiter.api.RepeatedTest;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
-import org.junit.jupiter.api.parallel.Execution;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Queue;
 import java.util.Random;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
-import static org.junit.jupiter.api.parallel.ExecutionMode.CONCURRENT;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
-@Execution(CONCURRENT)
 public class TimerWheelUtilTest {
 
     private static final Logger logger = LoggerFactory.getLogger(TimerWheelUtilTest.class);
 
     @RepeatedTest(1)
-    @Timeout(50)
-    public void testClusterConnect() throws Exception {
+    @Timeout(30)
+    public void testCompleteExecute() throws Exception {
         Queue taskQueue = new ConcurrentLinkedQueue();
         TimerWheelUtil timerWheelUtil = new TimerWheelUtil(10, 60, 100, taskQueue);
         new Thread(timerWheelUtil).start();
@@ -52,11 +53,36 @@ public class TimerWheelUtilTest {
 
     private void addTask(TimerWheelUtil timerWheelUtil, Random random) {
         for (int i = 0; i < 1000; i++) {
-            timerWheelUtil.schedule(new TimerTask(random.nextInt(8000)) {
+            timerWheelUtil.schedule(new TimerTask(random.nextInt(10000)) {
                 @Override
                 public void run() {
                 }
             });
         }
+    }
+
+    @Test
+    @Timeout(30)
+    public void testPunctualExecute() throws Exception {
+        BlockingQueue<TimerTask> taskQueue = new LinkedBlockingQueue();
+        TimerWheelUtil timerWheelUtil = new TimerWheelUtil(10, 60, 100, taskQueue);
+        new Thread(timerWheelUtil).start();
+        Random random = new Random();
+        new Thread(() -> {
+            for (int i = 0; i < 1000; i++) {
+                timerWheelUtil.schedule(new TimerTask(random.nextInt(10000)) {
+                    @Override
+                    public void run() {
+                        assumeTrue(Math.abs(System.currentTimeMillis() - getExecuteMs()) < 20);
+                    }
+                });
+            }
+        }).start();
+        int num = 0;
+        do {
+            TimerTask task = taskQueue.take();
+            task.run();
+            num++;
+        } while (num < 1000);
     }
 }
