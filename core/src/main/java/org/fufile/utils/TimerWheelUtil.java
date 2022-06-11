@@ -16,9 +16,6 @@
 
 package org.fufile.utils;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.concurrent.locks.Condition;
@@ -27,25 +24,23 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class TimerWheelUtil implements Runnable {
 
-    private static final Logger logger = LoggerFactory.getLogger(TimerWheelUtil.class);
-
     private final TimerWheel lowerWheel;
     private final TimerWheel upperWheel;
-    private final Queue<TimerTask> taskQueue;
+    private final Queue<TimerTask> tasks;
 
-    public TimerWheelUtil(long tick, int lowerBucketSize, int upperBucketSize, Queue<TimerTask> taskQueue) {
-        this.taskQueue = taskQueue;
-        long startTime = System.currentTimeMillis();
+    public TimerWheelUtil(long tickMs, int lowerBucketSize, int upperBucketSize, Queue<TimerTask> tasks) {
+        long startMs = System.currentTimeMillis();
         Lock lock = new ReentrantLock();
         Condition condition = lock.newCondition();
-        lowerWheel = new TimerWheel(tick, lowerBucketSize, startTime, lock, condition);
-        long upperWheelTotalMs = tick * lowerBucketSize;
-        upperWheel = new TimerWheel(upperWheelTotalMs, upperBucketSize, startTime + upperWheelTotalMs, new ReentrantLock());
+        lowerWheel = new TimerWheel(tickMs, lowerBucketSize, startMs, lock, condition);
+        long upperWheelTotalMs = tickMs * lowerBucketSize;
+        upperWheel = new TimerWheel(upperWheelTotalMs, upperBucketSize, startMs + upperWheelTotalMs, new ReentrantLock());
+        this.tasks = tasks;
     }
 
     public void schedule(TimerTask task) {
-        if (!lowerWheel.addWheel(task)) {
-            if (!upperWheel.addTopWheel(task)) {
+        if (!lowerWheel.addLowerWheel(task)) {
+            if (!upperWheel.addUpperWheel(task)) {
                 schedule(task);
             }
         }
@@ -55,10 +50,10 @@ public class TimerWheelUtil implements Runnable {
     public void run() {
         try {
             for (;;) {
-                lowerWheel.runWheel(taskQueue);
-                LinkedList<TimerTask> bucket = upperWheel.toggleTopWheel();
-                if (!bucket.isEmpty()) {
-                    lowerWheel.addWheel(bucket);
+                lowerWheel.runLowerWheel(tasks);
+                LinkedList<TimerTask> tasks = upperWheel.toggleUpperWheel();
+                if (!tasks.isEmpty()) {
+                    lowerWheel.addLowerWheel(tasks);
                 }
             }
         } catch (InterruptedException e) {

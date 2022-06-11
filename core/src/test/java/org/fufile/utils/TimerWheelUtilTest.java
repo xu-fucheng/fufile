@@ -42,7 +42,7 @@ public class TimerWheelUtilTest {
         Random random = new Random();
         for (int i = 0; i < 100; i++) {
             addTask(timerWheelUtil, random);
-            Thread.sleep(300);
+            Thread.sleep(100);
         }
         while (taskQueue.size() != 100000) {
             logger.info(Integer.toString(taskQueue.size()));
@@ -52,7 +52,7 @@ public class TimerWheelUtilTest {
 
     private void addTask(TimerWheelUtil timerWheelUtil, Random random) {
         for (int i = 0; i < 1000; i++) {
-            timerWheelUtil.schedule(new TimerTask(random.nextInt(10000)) {
+            timerWheelUtil.schedule(new TimerTask(random.nextInt(8000)) {
                 @Override
                 public void run() {
                 }
