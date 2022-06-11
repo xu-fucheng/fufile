@@ -39,21 +39,16 @@ public class TimerWheel {
     private int currentIndex = 0;
 
     public TimerWheel(long tick, int bucketSize, long startTime, Lock lock, Condition condition) {
-        this(tick, bucketSize, startTime);
-        this.lock = lock;
+        this(tick, bucketSize, startTime, lock);
         this.condition = condition;
     }
 
     public TimerWheel(long tick, int bucketSize, long startTime, Lock lock) {
-        this(tick, bucketSize, startTime);
-        this.lock = lock;
-    }
-
-    private TimerWheel(long tick, int bucketSize, long startTime) {
         this.tick = tick;
         this.bucketSize = bucketSize;
         this.startTime = startTime;
         this.totalTime = tick * bucketSize;
+        this.lock = lock;
         buckets = new LinkedList[bucketSize];
         for (int i = 0; i < bucketSize; i++) {
             buckets[i] = new LinkedList();
@@ -96,7 +91,7 @@ public class TimerWheel {
         }
     }
 
-    public LinkedList<TimerTask> runWheel(Queue<TimerTask> taskQueue, TimerWheel wheel) throws InterruptedException {
+    public void runWheel(Queue<TimerTask> taskQueue) throws InterruptedException {
         for (; ; ) {
             lock.lock();
             long currentTime = System.currentTimeMillis();
@@ -113,9 +108,8 @@ public class TimerWheel {
             if (index == bucketSize) {
                 currentIndex = 0;
                 startTime += totalTime;
-                LinkedList<TimerTask> bucket = wheel.toggleTopWheel();
                 lock.unlock();
-                return bucket;
+                return;
             }
             currentIndex = (int) index;
 
@@ -136,6 +130,7 @@ public class TimerWheel {
     }
 
     public LinkedList<TimerTask> toggleTopWheel() {
+        lock.lock();
         LinkedList<TimerTask> bucket = buckets[currentIndex];
         buckets[currentIndex] = new LinkedList<>();
         startTime += tick;
@@ -143,6 +138,7 @@ public class TimerWheel {
         if (currentIndex == bucketSize) {
             currentIndex = 0;
         }
+        lock.unlock();
         return bucket;
     }
 
@@ -151,6 +147,7 @@ public class TimerWheel {
         long currentTime = System.currentTimeMillis();
         long executeTime = currentTime + task.getDelayMs();
         if (executeTime - startTime > totalTime) {
+            lock.unlock();
             throw new RuntimeException("The delay time exceeds the maximum timer wheel range !");
         }
         if (executeTime < startTime) {

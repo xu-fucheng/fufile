@@ -19,6 +19,8 @@ package org.fufile.utils;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.parallel.Execution;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Queue;
 import java.util.Random;
@@ -29,6 +31,8 @@ import static org.junit.jupiter.api.parallel.ExecutionMode.CONCURRENT;
 @Execution(CONCURRENT)
 public class TimerWheelUtilTest {
 
+    private static final Logger logger = LoggerFactory.getLogger(TimerWheelUtilTest.class);
+
     @RepeatedTest(1)
     @Timeout(50)
     public void testClusterConnect() throws Exception {
@@ -38,17 +42,17 @@ public class TimerWheelUtilTest {
         Random random = new Random();
         for (int i = 0; i < 100; i++) {
             addTask(timerWheelUtil, random);
-            Thread.sleep(100);
+            Thread.sleep(300);
         }
         while (taskQueue.size() != 100000) {
-            System.out.println(taskQueue.size());
+            logger.info(Integer.toString(taskQueue.size()));
             Thread.sleep(1000);
         }
     }
 
     private void addTask(TimerWheelUtil timerWheelUtil, Random random) {
         for (int i = 0; i < 1000; i++) {
-            timerWheelUtil.schedule(new TimerTask(random.nextInt(20000)) {
+            timerWheelUtil.schedule(new TimerTask(random.nextInt(10000)) {
                 @Override
                 public void run() {
                 }

@@ -39,7 +39,8 @@ public class TimerWheelUtil implements Runnable {
         Lock lock = new ReentrantLock();
         Condition condition = lock.newCondition();
         lowerWheel = new TimerWheel(tick, lowerBucketSize, startTime, lock, condition);
-        upperWheel = new TimerWheel(tick * lowerBucketSize, upperBucketSize, startTime + tick * lowerBucketSize, lock);
+        long upperWheelTotalMs = tick * lowerBucketSize;
+        upperWheel = new TimerWheel(upperWheelTotalMs, upperBucketSize, startTime + upperWheelTotalMs, new ReentrantLock());
     }
 
     public void schedule(TimerTask task) {
@@ -54,9 +55,10 @@ public class TimerWheelUtil implements Runnable {
     public void run() {
         try {
             for (;;) {
-                LinkedList<TimerTask> timerTasks = lowerWheel.runWheel(taskQueue, upperWheel);
-                if (!timerTasks.isEmpty()) {
-                    lowerWheel.addWheel(timerTasks);
+                lowerWheel.runWheel(taskQueue);
+                LinkedList<TimerTask> bucket = upperWheel.toggleTopWheel();
+                if (!bucket.isEmpty()) {
+                    lowerWheel.addWheel(bucket);
                 }
             }
         } catch (InterruptedException e) {
