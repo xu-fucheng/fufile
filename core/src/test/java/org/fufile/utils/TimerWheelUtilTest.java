@@ -16,7 +16,7 @@
 
 package org.fufile.utils;
 
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.parallel.Execution;
 
@@ -29,24 +29,30 @@ import static org.junit.jupiter.api.parallel.ExecutionMode.CONCURRENT;
 @Execution(CONCURRENT)
 public class TimerWheelUtilTest {
 
-    @Test
-    @Timeout(60)
+    @RepeatedTest(1)
+    @Timeout(50)
     public void testClusterConnect() throws Exception {
         Queue taskQueue = new ConcurrentLinkedQueue();
-        TimerWheelUtil timerWheelUtil = new TimerWheelUtil(10, 100, 60, taskQueue);
+        TimerWheelUtil timerWheelUtil = new TimerWheelUtil(10, 60, 100, taskQueue);
         new Thread(timerWheelUtil).start();
         Random random = new Random();
+        for (int i = 0; i < 100; i++) {
+            addTask(timerWheelUtil, random);
+            Thread.sleep(100);
+        }
+        while (taskQueue.size() != 100000) {
+            System.out.println(taskQueue.size());
+            Thread.sleep(1000);
+        }
+    }
+
+    private void addTask(TimerWheelUtil timerWheelUtil, Random random) {
         for (int i = 0; i < 1000; i++) {
-            timerWheelUtil.schedule(new TimerTask(random.nextInt(10000)) {
+            timerWheelUtil.schedule(new TimerTask(random.nextInt(20000)) {
                 @Override
                 public void run() {
                 }
             });
         }
-        while (taskQueue.size() != 1000) {
-            Thread.sleep(1000);
-        }
     }
-
-
 }

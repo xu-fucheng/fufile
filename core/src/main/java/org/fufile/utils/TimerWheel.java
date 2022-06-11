@@ -136,13 +136,13 @@ public class TimerWheel {
     }
 
     public LinkedList<TimerTask> toggleTopWheel() {
+        LinkedList<TimerTask> bucket = buckets[currentIndex];
+        buckets[currentIndex] = new LinkedList<>();
+        startTime += tick;
         currentIndex += 1;
         if (currentIndex == bucketSize) {
             currentIndex = 0;
         }
-        LinkedList<TimerTask> bucket = buckets[currentIndex];
-        buckets[currentIndex] = new LinkedList<>();
-        startTime += tick;
         return bucket;
     }
 

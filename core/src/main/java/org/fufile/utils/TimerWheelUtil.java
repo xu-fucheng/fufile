@@ -39,7 +39,7 @@ public class TimerWheelUtil implements Runnable {
         Lock lock = new ReentrantLock();
         Condition condition = lock.newCondition();
         lowerWheel = new TimerWheel(tick, lowerBucketSize, startTime, lock, condition);
-        upperWheel = new TimerWheel(tick * lowerBucketSize, upperBucketSize, startTime, lock);
+        upperWheel = new TimerWheel(tick * lowerBucketSize, upperBucketSize, startTime + tick * lowerBucketSize, lock);
     }
 
     public void schedule(TimerTask task) {
