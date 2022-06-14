@@ -21,6 +21,7 @@ import org.fufile.utils.EchoServer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -42,7 +43,7 @@ public class SocketSelectorTest {
     public void init() throws Exception {
         server = new EchoServer();
         server.start();
-        selectable = new SocketSelector();
+        selectable = new NonBlockingConnectionSelector();
     }
 
     @AfterEach
@@ -54,6 +55,7 @@ public class SocketSelectorTest {
     /**
      * Tests SocketSelector to connect, read, and write in parallel
      */
+    @Disabled
     @Test
     public void testWholeProcess() throws Exception {
         int connectionsNumber = 32;
@@ -94,6 +96,7 @@ public class SocketSelectorTest {
     /**
      * Tests big data transfer
      */
+    @Disabled
     @Test
     public void transferLargeData() throws IOException {
         // 32m
@@ -126,7 +129,7 @@ public class SocketSelectorTest {
         return sb.toString();
     }
 
-
+    @Disabled
     @Test
     public void testClientBlockingConnection() throws Exception {
         BlockingConnectionSelector blockingConnectionSelector = new BlockingConnectionSelector();
@@ -148,6 +151,21 @@ public class SocketSelectorTest {
             boolean connected = super.doConnect(channel, address);
             channel.configureBlocking(false);
             return connected;
+        }
+
+        @Override
+        protected void sendHeartbeat(FufileChannel channel) {
+        }
+    }
+
+    private static class NonBlockingConnectionSelector extends SocketSelector {
+
+        public NonBlockingConnectionSelector() {
+            super();
+        }
+
+        @Override
+        protected void sendHeartbeat(FufileChannel channel) {
         }
     }
 }

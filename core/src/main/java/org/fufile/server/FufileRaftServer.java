@@ -43,13 +43,12 @@ public class FufileRaftServer implements Runnable {
     private int index;
     private ServerSocketSelector serverSocketSelector;
     private List<ServerNode> nodes;
-    protected List<ServerNode> remoteNodes;
-    private List<ServerNode> needConnect;
-    private List<ServerNode> acceptNode;
+    protected List<ServerNode> remoteNodes = new ArrayList<>();
+    private List<ServerNode> needConnect = new ArrayList<>();
+    private List<ServerNode> acceptNode = new ArrayList<>();
     private List<InetSocketAddress> disconnected;
     private List<String> connecting;
-    protected Map<String, FufileSocketChannel> connectedChannels;
-    protected Map<String, FufileSocketChannel> anonymityConnections;
+    protected Map<String, FufileSocketChannel> connectedChannels = new ConcurrentHashMap<>();
     private ServerNode localNode;
     private volatile boolean running;
 
@@ -74,21 +73,16 @@ public class FufileRaftServer implements Runnable {
      */
     private int quorumState;
 
-    public FufileRaftServer(InetSocketAddress localAddress) throws IOException {
-        needConnect = new ArrayList<>();
-        acceptNode = new ArrayList<>();
-        remoteNodes = new ArrayList<>();
-        connectedChannels = new ConcurrentHashMap<>();
-        anonymityConnections = new ConcurrentHashMap<>();
+    public FufileRaftServer(String nodeId, InetSocketAddress localAddress) throws IOException {
         serverSocketSelector = new ServerSocketSelector(localAddress);
         socketServers = new SocketServer[SOCKET_PROCESS_THREAD_NUM];
         for (int i = 0; i < socketServers.length; i++) {
-            socketServers[i] = new SocketServer(connectedChannels, anonymityConnections);
+            socketServers[i] = new SocketServer(nodeId, connectedChannels);
         }
     }
 
     public FufileRaftServer(int nodeId, InetSocketAddress localAddress, List<ServerNode> nodes) throws IOException {
-        this(localAddress);
+        this(Integer.toString(nodeId), localAddress);
         configNodes(nodeId, nodes);
     }
 

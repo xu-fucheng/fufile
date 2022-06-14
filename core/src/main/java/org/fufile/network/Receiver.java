@@ -21,6 +21,7 @@ import org.fufile.transfer.FufileMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 
 /**
@@ -29,12 +30,12 @@ import java.nio.ByteBuffer;
 public class Receiver {
 
     private static final Logger logger = LoggerFactory.getLogger(Receiver.class);
-    private static final byte REQUEST = (byte) 0;
-    private static final byte RESPONSE = (byte) 1;
-    private byte messageType;
+    public static final byte REQUEST = (byte) 0;
+    public static final byte RESPONSE = (byte) 1;
+    public final byte messageType;
     private FufileMessage message;
 
-    public Receiver(ByteBuffer payload) {
+    public Receiver(ByteBuffer payload) throws UnsupportedEncodingException {
         short apiId = payload.getShort();
         ApiNames api = ApiNames.getApi(apiId);
         messageType = payload.get();
@@ -45,6 +46,7 @@ public class Receiver {
         } else {
             throw new RuntimeException();
         }
+        message.deserialize();
     }
 
 

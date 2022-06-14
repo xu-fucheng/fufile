@@ -80,8 +80,12 @@ public class FufileSocketChannel extends FufileChannel {
         }
     }
 
-    public void addSender(Sender sender) {
+    public boolean addSender(Sender sender) {
+        if (this.sender != null) {
+            return false;
+        }
         this.sender = sender;
+        return true;
     }
 
     public void register(Selector sel, int ops) throws IOException {
@@ -110,6 +114,7 @@ public class FufileSocketChannel extends FufileChannel {
     public void write() throws IOException {
         if (!sender.toWrite(channel())) {
             selectionKey.interestOps(selectionKey.interestOps() & ~SelectionKey.OP_WRITE);
+            sender = null;
         }
     }
 

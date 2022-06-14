@@ -19,14 +19,22 @@ package org.fufile.server;
 import org.fufile.network.FufileSocketChannel;
 import org.fufile.network.Receiver;
 import org.fufile.network.SocketSelector;
+import org.fufile.transfer.FufileMessage;
+import org.fufile.transfer.HeartbeatRequestMessage;
+import org.fufile.utils.FufileThread;
+import org.fufile.utils.TimerTask;
+import org.fufile.utils.TimerWheelUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 /**
@@ -36,12 +44,17 @@ public class SocketServer implements Runnable {
 
     private static final Logger logger = LoggerFactory.getLogger(SocketServer.class);
 
+    private String nodeId;
     private SocketSelector socketSelector;
     private Queue<ServerNode> remoteNodes;
     private Map<String, FufileSocketChannel> connectedChannels;
+    private final Queue<TimerTask> taskQueue = new ConcurrentLinkedQueue();
+    private final TimerWheelUtil timerWheelUtil = new TimerWheelUtil(10, 60, 100, taskQueue);
 
-    public SocketServer(Map<String, FufileSocketChannel> connectedChannels, Map<String, FufileSocketChannel> anonymityConnections) {
-        this.socketSelector = new SocketSelector(connectedChannels, anonymityConnections);
+    public SocketServer(String nodeId, Map<String, FufileSocketChannel> connectedChannels) {
+        this.nodeId = nodeId;
+        this.connectedChannels = connectedChannels;
+        this.socketSelector = new SocketSelector(nodeId, connectedChannels, timerWheelUtil);
         remoteNodes = new LinkedBlockingQueue();
     }
 
@@ -55,6 +68,7 @@ public class SocketServer implements Runnable {
 
     @Override
     public void run() {
+        new FufileThread(timerWheelUtil, Thread.currentThread().getName() + " Timer wheel").start();
         // connect
         try {
             while (!remoteNodes.isEmpty()) {
@@ -65,8 +79,11 @@ public class SocketServer implements Runnable {
 
             for (; ; ) {
                 try {
-
-                    socketSelector.doPool(100);
+                    for (int i = 0; i < taskQueue.size(); i++) {
+                        TimerTask task = taskQueue.poll();
+                        task.run();
+                    }
+                    socketSelector.doPool(500);
                     socketSelector.registerNewConnections();
                     // write read
                     handleReceive();
@@ -79,7 +96,7 @@ public class SocketServer implements Runnable {
 
 
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    logger.error(e.getMessage(), e);
                 }
             }
 
@@ -89,23 +106,37 @@ public class SocketServer implements Runnable {
 
     }
 
-    private void handleReceive() {
+    private void handleReceive() throws UnsupportedEncodingException {
         Collection<FufileSocketChannel> channels = socketSelector.getReceive();
-        for (FufileSocketChannel channel : channels) {
-            Receiver receiver = channel.getReceiver();
-            receiver.message();
 
+        Iterator<FufileSocketChannel> channelIterator = channels.iterator();
+        while (channelIterator.hasNext()) {
+            FufileSocketChannel channel = channelIterator.next();
+            Receiver receiver = channel.getReceiver();
+            if (receiver.messageType == Receiver.REQUEST) {
+                handleRequest(receiver, channel);
+            } else if (receiver.messageType == Receiver.RESPONSE) {
+                handleResponse(receiver, channel);
+            }
+
+            channelIterator.remove();
+        }
+
+
+    }
+
+    private void handleResponse(Receiver receiver, FufileSocketChannel channel) {
+
+    }
+
+    private void handleRequest(Receiver receiver, FufileSocketChannel channel) {
+        FufileMessage message = receiver.message();
+        if (message instanceof HeartbeatRequestMessage) {
+            HeartbeatRequestMessage heartbeatRequestMessage = (HeartbeatRequestMessage) message;
+            connectedChannels.putIfAbsent(heartbeatRequestMessage.nodeId(), channel);
 
         }
-        handleRequest();
-        handleResponse();
 
-    }
-
-    private void handleResponse() {
-    }
-
-    private void handleRequest() {
 
     }
 

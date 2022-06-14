@@ -16,6 +16,9 @@
 
 package org.fufile.network;
 
+import org.fufile.transfer.HeartbeatRequestMessage;
+import org.fufile.utils.TimerTask;
+import org.fufile.utils.TimerWheelUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,26 +37,23 @@ public class SocketSelector extends FufileSelector implements SocketSelectable {
 
     private final static Logger logger = LoggerFactory.getLogger(SocketSelector.class);
 
+    private String nodeId;
     protected final Map<String, FufileSocketChannel> connectedChannels;
-    protected final Map<String, FufileSocketChannel> anonymityConnections;
-    private final LinkedHashMap<String, FufileSocketChannel> receivedChannels;
-    private final Queue<FufileSocketChannel> newConnections;
+    private final LinkedHashMap<String, FufileSocketChannel> receivedChannels = new LinkedHashMap<>();
     private final int connectionQueueSize = 16;
+    private final Queue<FufileSocketChannel> newConnections = new ArrayBlockingQueue(connectionQueueSize);
+    private TimerWheelUtil timerWheelUtil;
 
     public SocketSelector() {
         super();
         connectedChannels = new HashMap<>();
-        anonymityConnections = new HashMap<>();
-        receivedChannels = new LinkedHashMap<>();
-        newConnections = new ArrayBlockingQueue(connectionQueueSize);
     }
 
-    public SocketSelector(Map connectedChannels, Map<String, FufileSocketChannel> anonymityConnections) {
+    public SocketSelector(String nodeId, Map connectedChannels, TimerWheelUtil timerWheelUtil) {
         super();
+        this.nodeId = nodeId;
         this.connectedChannels = connectedChannels;
-        this.anonymityConnections = anonymityConnections;
-        receivedChannels = new LinkedHashMap<>();
-        newConnections = new ArrayBlockingQueue(connectionQueueSize);
+        this.timerWheelUtil = timerWheelUtil;
     }
 
     @Override
@@ -71,6 +71,7 @@ public class SocketSelector extends FufileSelector implements SocketSelectable {
                 FufileSocketChannel channel = new FufileSocketChannel(nodeId, socketChannel);
                 channel.register(selector, SelectionKey.OP_READ);
                 connectedChannels.put(nodeId, channel);
+                sendHeartbeat(channel);
             } else {
                 FufileSocketChannel channel = new FufileSocketChannel(nodeId, socketChannel);
                 channel.register(selector, SelectionKey.OP_CONNECT);
@@ -84,15 +85,31 @@ public class SocketSelector extends FufileSelector implements SocketSelectable {
         }
     }
 
+    /**
+     * Client sends a heartbeat when the server is successfully connected.
+     */
+    protected void sendHeartbeat(FufileChannel channel) {
+        send(new Sender(channel.getNodeId(), new HeartbeatRequestMessage(nodeId)));
+        timerWheelUtil.schedule(new TimerTask(2000) {
+            @Override
+            public void run() {
+                send(new Sender(channel.getNodeId(), new HeartbeatRequestMessage(nodeId)));
+                timerWheelUtil.schedule(this);
+            }
+        });
+    }
 
     /**
      *
      */
     @Override
-    public void send(Sender sender) {
-        FufileSocketChannel socketChannel = connectedChannels.get(sender.getChannelId());
-        socketChannel.addSender(sender);
-        socketChannel.addInterestOps(SelectionKey.OP_WRITE);
+    public boolean send(Sender sender) {
+        FufileSocketChannel socketChannel = connectedChannels.get(sender.nodeId());
+        if (socketChannel.addSender(sender)) {
+            socketChannel.addInterestOps(SelectionKey.OP_WRITE);
+            return true;
+        }
+        return false;
     }
 
     @Override
@@ -122,10 +139,7 @@ public class SocketSelector extends FufileSelector implements SocketSelectable {
                 // confirm identity
                 connectedChannels.put(channel.getNodeId(), channel);
                 // send heartbeat to identify
-
-
-            } else {
-                anonymityConnections.put(channel.channel().getRemoteAddress().toString(), channel);
+                sendHeartbeat(channel);
             }
         }
     }

@@ -24,19 +24,13 @@ import java.nio.channels.SocketChannel;
 
 public class Sender {
 
-    private final String channelId;
-
-    /**
-     *
-     */
-    private final FufileMessage message;
+    private final String nodeId;
 
     private final ByteBuffer payload;
 
-    public Sender(String channelId,
+    public Sender(String nodeId,
                   FufileMessage message) {
-        this.channelId = channelId;
-        this.message = message;
+        this.nodeId = nodeId;
         payload = message.serialize();
     }
 
@@ -45,7 +39,7 @@ public class Sender {
         return payload.hasRemaining();
     }
 
-    public String getChannelId() {
-        return channelId;
+    public String nodeId() {
+        return nodeId;
     }
 }
