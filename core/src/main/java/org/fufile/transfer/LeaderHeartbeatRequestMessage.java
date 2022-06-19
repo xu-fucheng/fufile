@@ -14,31 +14,26 @@
  * under the License.
  */
 
-package org.fufile.utils;
+package org.fufile.transfer;
 
-public abstract class TimerTask implements Runnable {
+import java.io.UnsupportedEncodingException;
+import java.nio.ByteBuffer;
 
-    final long delayMs;
-    private long executeMs;
-    private boolean isDeleted = false;
+public class LeaderHeartbeatRequestMessage implements FufileMessage {
 
-    public TimerTask(long delayMs) {
-        this.delayMs = delayMs;
+    private ByteBuffer payload;
+
+    public LeaderHeartbeatRequestMessage(ByteBuffer payload) {
+        this.payload = payload;
     }
 
-    long getExecuteMs() {
-        return executeMs;
+    @Override
+    public ByteBuffer serialize() {
+        return null;
     }
 
-    void setExecuteMs(long executeMs) {
-        this.executeMs = executeMs;
-    }
+    @Override
+    public void deserialize() throws UnsupportedEncodingException {
 
-    public boolean isDeleted() {
-        return isDeleted;
-    }
-
-    public void setDeleted(boolean deleted) {
-        isDeleted = deleted;
     }
 }

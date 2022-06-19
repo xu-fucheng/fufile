@@ -18,8 +18,10 @@ package org.fufile.server;
 
 import org.fufile.network.FufileSocketChannel;
 import org.fufile.network.ServerSocketSelector;
+import org.fufile.transfer.LeaderHeartbeatRequestMessage;
 import org.fufile.utils.FufileThread;
-import org.fufile.utils.Timer;
+import org.fufile.utils.TimerTask;
+import org.fufile.utils.TimerWheelUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,7 +31,9 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * raft server
@@ -39,7 +43,7 @@ public class FufileRaftServer implements Runnable {
     private static final Logger logger = LoggerFactory.getLogger(FufileRaftServer.class);
 
     private static final int SOCKET_PROCESS_THREAD_NUM = 2;
-    private SocketServer[] socketServers;
+    private SocketHandler[] socketHandlers;
     private int index;
     private ServerSocketSelector serverSocketSelector;
     private List<ServerNode> nodes;
@@ -59,30 +63,44 @@ public class FufileRaftServer implements Runnable {
     private String votedFor;
     private int commitIndex;
     private int lastApplied;
-
-    private Timer electionTimeoutTimer;
-    private Timer heartbeatTimer;
     private long heartbeatInterval = 2 * 1000;
     private long minElectionTimeout = 10 * 1000;
     private long maxElectionTimeout = 20 * 1000;
 
     // -----------------------------
 
-    /**
-     *
-     */
+
     private int quorumState;
+
+    // leader heartbeat
+    private Queue<LeaderHeartbeatRequestMessage> leaderHeartbeatRequestMessages = new ConcurrentLinkedQueue<>();
+
+    private TimerTask electTimeoutTask;
+
+    private final Queue<TimerTask> taskQueue = new ConcurrentLinkedQueue();
+    private final TimerWheelUtil timerWheelUtil = new TimerWheelUtil(10, 60, 100, taskQueue);
 
     public FufileRaftServer(String nodeId, InetSocketAddress localAddress) throws IOException {
         serverSocketSelector = new ServerSocketSelector(localAddress);
-        socketServers = new SocketServer[SOCKET_PROCESS_THREAD_NUM];
-        for (int i = 0; i < socketServers.length; i++) {
-            socketServers[i] = new SocketServer(nodeId, connectedChannels);
+        socketHandlers = new SocketHandler[SOCKET_PROCESS_THREAD_NUM];
+        for (int i = 0; i < socketHandlers.length; i++) {
+            socketHandlers[i] = new SocketHandler(nodeId, connectedChannels);
         }
     }
 
-    public FufileRaftServer(int nodeId, InetSocketAddress localAddress, List<ServerNode> nodes) throws IOException {
-        this(Integer.toString(nodeId), localAddress);
+    public FufileRaftServer(String nodeId, InetSocketAddress localAddress, int socketProcessThreadNum) throws IOException {
+        serverSocketSelector = new ServerSocketSelector(localAddress);
+        socketHandlers = new SocketHandler[socketProcessThreadNum];
+        for (int i = 0; i < socketHandlers.length; i++) {
+            socketHandlers[i] = new SocketHandler(nodeId, connectedChannels);
+        }
+    }
+
+    public FufileRaftServer(int nodeId,
+                            InetSocketAddress localAddress,
+                            List<ServerNode> nodes,
+                            int socketProcessThreadNum) throws IOException {
+        this(Integer.toString(nodeId), localAddress, socketProcessThreadNum);
         configNodes(nodeId, nodes);
     }
 
@@ -111,15 +129,20 @@ public class FufileRaftServer implements Runnable {
     @Override
     public void run() {
         running = true;
-        electionTimeoutTimer = new Timer(minElectionTimeout);
-        // timeout -> send heartbeat -> reset
-        heartbeatTimer = new Timer(heartbeatInterval);
         // handle new connections
         // assign connections
 
-        for (int i = 0; i < socketServers.length; i++) {
-            new FufileThread(socketServers[i], "server -" + localNode.getId() + ". socket server -" + i).start();
+        for (int i = 0; i < socketHandlers.length; i++) {
+            new FufileThread(socketHandlers[i], "server -" + localNode.getId() + ". socket server -" + i).start();
         }
+
+        electTimeoutTask = new TimerTask(10000) {
+            @Override
+            public void run() {
+                // handle elect timeout
+            }
+        };
+        timerWheelUtil.schedule(electTimeoutTask);
 
         for (; ; ) {
 
@@ -136,9 +159,9 @@ public class FufileRaftServer implements Runnable {
                     FufileSocketChannel channel = iterator.next();
                     // This is an anonymity connection, because we do not know node-id of the client.
                     boolean allocated = false;
-                    for (int i = 0; i < socketServers.length; i++) {
-                        SocketServer socketServer = socketServers[Math.abs(index++) % socketServers.length];
-                        if (socketServer.allocateNewConnections(channel)) {
+                    for (int i = 0; i < socketHandlers.length; i++) {
+                        SocketHandler socketHandler = socketHandlers[Math.abs(index++) % socketHandlers.length];
+                        if (socketHandler.allocateNewConnections(channel)) {
                             iterator.remove();
                             allocated = true;
                             break;
@@ -157,6 +180,15 @@ public class FufileRaftServer implements Runnable {
             checkConnection();
             checkSendHeartbeat();
             checkElectionTimeout();
+
+
+            while (!taskQueue.isEmpty()) {
+                TimerTask task = taskQueue.poll();
+                if (!task.isDeleted()) {
+                    task.run();
+                }
+
+            }
         }
 
     }
@@ -165,27 +197,54 @@ public class FufileRaftServer implements Runnable {
     }
 
     private void checkElectionTimeout() {
-        if (electionTimeoutTimer.timeout()) {
-            // timeout
+        while (!leaderHeartbeatRequestMessages.isEmpty()) {
+            LeaderHeartbeatRequestMessage requestMessage = leaderHeartbeatRequestMessages.poll();
 
+
+            electTimeoutTask.setDeleted(true);
+            electTimeoutTask = new TimerTask(10000) {
+                @Override
+                public void run() {
+                    // handle elect timeout
+                    handleElectTimeout();
+                }
+            };
+            timerWheelUtil.schedule(electTimeoutTask);
         }
+    }
+
+    private void handleElectTimeout() {
+        // Check whether the number of connected servers in the cluster reaches the majority.
+        if (connectedChannels.size() + 1 > nodes.size() / 2) {
+            // The server is eligible for election
+            currentTerm++;
+            // send vote rpc to connected servers
+
+
+        } else {
+            // The server is not eligible for election, and try again in 10s.
+            electTimeoutTask = new TimerTask(10000) {
+                @Override
+                public void run() {
+                    // handle elect timeout
+                    handleElectTimeout();
+                }
+            };
+            timerWheelUtil.schedule(electTimeoutTask);
+        }
+
     }
 
     private void checkSendHeartbeat() {
         // per connect
-        if (heartbeatTimer.timeout()) {
-            // send heartbeat
 
-
-            heartbeatTimer.reset();
-        }
     }
 
     public void connect() {
 
         needConnect.forEach(node -> {
-            SocketServer socketServer = socketServers[Math.abs(index++) % socketServers.length];
-            socketServer.allocateConnections(node);
+            SocketHandler socketHandler = socketHandlers[Math.abs(index++) % socketHandlers.length];
+            socketHandler.allocateConnections(node);
         });
     }
 

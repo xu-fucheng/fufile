@@ -17,10 +17,8 @@
 package org.fufile.server;
 
 import org.fufile.network.FufileSocketChannel;
-import org.fufile.network.Receiver;
-import org.fufile.network.SocketSelector;
-import org.fufile.transfer.FufileMessage;
-import org.fufile.transfer.HeartbeatRequestMessage;
+import org.fufile.network.ServerSocketSelector;
+import org.fufile.transfer.LeaderHeartbeatRequestMessage;
 import org.fufile.utils.FufileThread;
 import org.fufile.utils.TimerTask;
 import org.fufile.utils.TimerWheelUtil;
@@ -28,116 +26,226 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
-import java.util.Collection;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.LinkedBlockingQueue;
 
 /**
- *
+ * raft server
  */
 public class SocketServer implements Runnable {
 
     private static final Logger logger = LoggerFactory.getLogger(SocketServer.class);
 
-    private String nodeId;
-    private SocketSelector socketSelector;
-    private Queue<ServerNode> remoteNodes;
-    private Map<String, FufileSocketChannel> connectedChannels;
+    private static final int SOCKET_PROCESS_THREAD_NUM = 2;
+    private SocketHandler[] socketHandlers;
+    private int index;
+    private ServerSocketSelector serverSocketSelector;
+    private List<ServerNode> nodes;
+    protected List<ServerNode> remoteNodes = new ArrayList<>();
+    private List<ServerNode> needConnect = new ArrayList<>();
+    private List<ServerNode> acceptNode = new ArrayList<>();
+    private List<InetSocketAddress> disconnected;
+    private List<String> connecting;
+    protected Map<String, FufileSocketChannel> connectedChannels = new ConcurrentHashMap<>();
+    private ServerNode localNode;
+    private volatile boolean running;
+
+
+    // raft related ---------------
+
+    private int currentTerm;
+    private String votedFor;
+    private int commitIndex;
+    private int lastApplied;
+    private long heartbeatInterval = 2 * 1000;
+    private long minElectionTimeout = 10 * 1000;
+    private long maxElectionTimeout = 20 * 1000;
+
+    // -----------------------------
+
+
+    private int quorumState;
+
+    // leader heartbeat
+    private Queue<LeaderHeartbeatRequestMessage> leaderHeartbeatRequestMessages = new ConcurrentLinkedQueue<>();
+
+    private TimerTask electTimeoutTask;
+
     private final Queue<TimerTask> taskQueue = new ConcurrentLinkedQueue();
     private final TimerWheelUtil timerWheelUtil = new TimerWheelUtil(10, 60, 100, taskQueue);
 
-    public SocketServer(String nodeId, Map<String, FufileSocketChannel> connectedChannels) {
-        this.nodeId = nodeId;
-        this.connectedChannels = connectedChannels;
-        this.socketSelector = new SocketSelector(nodeId, connectedChannels, timerWheelUtil);
-        remoteNodes = new LinkedBlockingQueue();
+    public SocketServer(String nodeId, InetSocketAddress localAddress) throws IOException {
+        serverSocketSelector = new ServerSocketSelector(localAddress);
+        socketHandlers = new SocketHandler[SOCKET_PROCESS_THREAD_NUM];
+        for (int i = 0; i < socketHandlers.length; i++) {
+            socketHandlers[i] = new SocketHandler(nodeId, connectedChannels);
+        }
     }
 
-    public boolean allocateNewConnections(FufileSocketChannel channel) throws IOException {
-        return socketSelector.allocateNewConnections(channel);
+    public SocketServer(String nodeId, InetSocketAddress localAddress, int socketProcessThreadNum) throws IOException {
+        serverSocketSelector = new ServerSocketSelector(localAddress);
+        socketHandlers = new SocketHandler[socketProcessThreadNum];
+        for (int i = 0; i < socketHandlers.length; i++) {
+            socketHandlers[i] = new SocketHandler(nodeId, connectedChannels);
+        }
     }
 
-    public boolean allocateConnections(ServerNode node) {
-        return remoteNodes.offer(node);
+    public SocketServer(int nodeId, InetSocketAddress localAddress, List<ServerNode> nodes, int socketProcessThreadNum) throws IOException {
+        this(Integer.toString(nodeId), localAddress, socketProcessThreadNum);
+        configNodes(nodeId, nodes);
     }
 
+    public void configNodes(int nodeId, List<ServerNode> nodes) {
+        this.nodes = nodes;
+        filterConnect(nodeId, nodes);
+        connect();
+    }
+
+    public void filterConnect(int nodeId, List<ServerNode> nodes) {
+        for (ServerNode serverNode : nodes) {
+            if (serverNode.getId() < nodeId) {
+                needConnect.add(serverNode);
+            }
+            if (serverNode.getId() == nodeId) {
+                localNode = serverNode;
+            } else {
+                remoteNodes.add(serverNode);
+            }
+        }
+    }
+
+    /**
+     *
+     */
     @Override
     public void run() {
-        new FufileThread(timerWheelUtil, Thread.currentThread().getName() + " Timer wheel").start();
-        // connect
-        try {
-            while (!remoteNodes.isEmpty()) {
-                ServerNode node = remoteNodes.poll();
-                socketSelector.connect(node.getIdString(), new InetSocketAddress(node.getHostname(), node.getPort()));
+        running = true;
+        // handle new connections
+        // assign connections
+
+        for (int i = 0; i < socketHandlers.length; i++) {
+            new FufileThread(socketHandlers[i], "server -" + localNode.getId() + ". socket server -" + i).start();
+        }
+
+        electTimeoutTask = new TimerTask(10000) {
+            @Override
+            public void run() {
+                // handle elect timeout
+            }
+        };
+        timerWheelUtil.schedule(electTimeoutTask);
+
+        for (; ; ) {
+
+            if (!running) {
+                // stop server
+                break;
             }
 
 
-            for (; ; ) {
-                try {
-                    for (int i = 0; i < taskQueue.size(); i++) {
-                        TimerTask task = taskQueue.poll();
-                        task.run();
+            try {
+                serverSocketSelector.doPool(500);
+                Iterator<FufileSocketChannel> iterator = serverSocketSelector.getNewConnections().listIterator();
+                while (iterator.hasNext()) {
+                    FufileSocketChannel channel = iterator.next();
+                    // This is an anonymity connection, because we do not know node-id of the client.
+                    boolean allocated = false;
+                    for (int i = 0; i < socketHandlers.length; i++) {
+                        SocketHandler socketHandler = socketHandlers[Math.abs(index++) % socketHandlers.length];
+                        if (socketHandler.allocateNewConnections(channel)) {
+                            iterator.remove();
+                            allocated = true;
+                            break;
+                        }
                     }
-                    socketSelector.doPool(500);
-                    socketSelector.registerNewConnections();
-                    // write read
-                    handleReceive();
-
-                    // get receives
-
-
-                    // heartbeat timeout
-                    // If leader's connection election timeout, notify FufileRaftServer to launch election.
-
-
-                } catch (IOException e) {
-                    logger.error(e.getMessage(), e);
+                    if (!allocated) {
+                        break;
+                    }
                 }
+
+            } catch (Exception e) {
+                logger.error(e.getMessage(), e);
             }
 
-        } catch (Exception e) {
-            logger.error(e.getMessage(), e);
-        }
+            // countDownLatch
+            checkConnection();
+            checkSendHeartbeat();
+            checkElectionTimeout();
 
-    }
 
-    private void handleReceive() throws UnsupportedEncodingException {
-        Collection<FufileSocketChannel> channels = socketSelector.getReceive();
+            while (!taskQueue.isEmpty()) {
+                TimerTask task = taskQueue.poll();
+                if (!task.isDeleted()) {
+                    task.run();
+                }
 
-        Iterator<FufileSocketChannel> channelIterator = channels.iterator();
-        while (channelIterator.hasNext()) {
-            FufileSocketChannel channel = channelIterator.next();
-            Receiver receiver = channel.getReceiver();
-            if (receiver.messageType == Receiver.REQUEST) {
-                handleRequest(receiver, channel);
-            } else if (receiver.messageType == Receiver.RESPONSE) {
-                handleResponse(receiver, channel);
             }
-
-            channelIterator.remove();
         }
 
-
     }
 
-    private void handleResponse(Receiver receiver, FufileSocketChannel channel) {
-
+    protected void checkConnection() {
     }
 
-    private void handleRequest(Receiver receiver, FufileSocketChannel channel) {
-        FufileMessage message = receiver.message();
-        if (message instanceof HeartbeatRequestMessage) {
-            HeartbeatRequestMessage heartbeatRequestMessage = (HeartbeatRequestMessage) message;
-            connectedChannels.putIfAbsent(heartbeatRequestMessage.nodeId(), channel);
+    private void checkElectionTimeout() {
+        while (!leaderHeartbeatRequestMessages.isEmpty()) {
+            LeaderHeartbeatRequestMessage requestMessage = leaderHeartbeatRequestMessages.poll();
 
+
+            electTimeoutTask.setDeleted(true);
+            electTimeoutTask = new TimerTask(10000) {
+                @Override
+                public void run() {
+                    // handle elect timeout
+                    handleElectTimeout();
+                }
+            };
+            timerWheelUtil.schedule(electTimeoutTask);
+        }
+    }
+
+    private void handleElectTimeout() {
+        // Check whether the number of connected servers in the cluster reaches the majority.
+        if (connectedChannels.size() + 1 > nodes.size() / 2) {
+            // The server is eligible for election
+            currentTerm++;
+            // send vote rpc to connected servers
+
+
+        } else {
+            // The server is not eligible for election, and try again in 10s.
+            electTimeoutTask = new TimerTask(10000) {
+                @Override
+                public void run() {
+                    // handle elect timeout
+                    handleElectTimeout();
+                }
+            };
+            timerWheelUtil.schedule(electTimeoutTask);
         }
 
+    }
+
+    private void checkSendHeartbeat() {
+        // per connect
 
     }
 
+    public void connect() {
+
+        needConnect.forEach(node -> {
+            SocketHandler socketHandler = socketHandlers[Math.abs(index++) % socketHandlers.length];
+            socketHandler.allocateConnections(node);
+        });
+    }
+
+    public int getPort() {
+        return serverSocketSelector.getFufileServerSocketChannel().getLocalPort();
+    }
 }

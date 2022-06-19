@@ -19,6 +19,8 @@ package org.fufile.api;
 import org.fufile.transfer.FufileMessage;
 import org.fufile.transfer.HeartbeatRequestMessage;
 import org.fufile.transfer.HeartbeatResponseMessage;
+import org.fufile.transfer.LeaderHeartbeatRequestMessage;
+import org.fufile.transfer.LeaderHeartbeatResponseMessage;
 import org.fufile.transfer.TestStringMessage;
 import org.fufile.transfer.VoteRequestMessage;
 import org.fufile.transfer.VoteResponseMessage;
@@ -31,9 +33,15 @@ import java.util.stream.Collectors;
 
 public enum ApiNames {
 
-    TEST((short) -1, "test", payload -> new TestStringMessage(payload), payload -> new TestStringMessage(payload)),
-    HEARTBEAT((short) 0, "Heartbeat", payload -> new HeartbeatRequestMessage(payload), payload -> new HeartbeatResponseMessage(payload)),
-    VOTE((short) 1, "Vote", payload -> new VoteRequestMessage(payload), payload -> new VoteResponseMessage(payload));
+    TEST((short) -1, "test",
+            payload -> new TestStringMessage(payload), payload -> new TestStringMessage(payload)),
+    HEARTBEAT((short) 0, "heartbeat",
+            payload -> new HeartbeatRequestMessage(payload), payload -> new HeartbeatResponseMessage(payload)),
+    VOTE((short) 1, "vote",
+            payload -> new VoteRequestMessage(payload), payload -> new VoteResponseMessage(payload)),
+    LEADER_HEARTBEAT((short) 2, "leader heartbeat",
+            payload -> new LeaderHeartbeatRequestMessage(payload), payload -> new LeaderHeartbeatResponseMessage(payload));
+
 
     public final short id;
     public final String name;

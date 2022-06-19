@@ -14,31 +14,7 @@
  * under the License.
  */
 
-package org.fufile.utils;
+package org.fufile.raft;
 
-public abstract class TimerTask implements Runnable {
-
-    final long delayMs;
-    private long executeMs;
-    private boolean isDeleted = false;
-
-    public TimerTask(long delayMs) {
-        this.delayMs = delayMs;
-    }
-
-    long getExecuteMs() {
-        return executeMs;
-    }
-
-    void setExecuteMs(long executeMs) {
-        this.executeMs = executeMs;
-    }
-
-    public boolean isDeleted() {
-        return isDeleted;
-    }
-
-    public void setDeleted(boolean deleted) {
-        isDeleted = deleted;
-    }
+public class FollowerState implements MembershipState {
 }

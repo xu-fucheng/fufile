@@ -81,13 +81,13 @@ public class FufileRaftServerIntegrationTest {
         nodes.add(node2);
         ServerNode node3 = new ServerNode(3, "localhost", 9003);
         nodes.add(node3);
-        FufileRaftServer server1 = new FufileRaftServer("1", new InetSocketAddress(9001));
+        FufileRaftServer server1 = new FufileRaftServer("1", new InetSocketAddress(9001), 1);
         server1.configNodes(1, nodes);
         new Thread(server1, "raft thread -" + 1).start();
-        FufileRaftServer server2 = new FufileRaftServer("2", new InetSocketAddress(9002));
+        FufileRaftServer server2 = new FufileRaftServer("2", new InetSocketAddress(9002), 1);
         server2.configNodes(2, nodes);
         new Thread(server2, "raft thread -" + 2).start();
-        FufileRaftServer server3 = new FufileRaftServer("3", new InetSocketAddress(9003));
+        FufileRaftServer server3 = new FufileRaftServer("3", new InetSocketAddress(9003), 1);
         server3.configNodes(3, nodes);
         new Thread(server3, "raft thread -" + 3).start();
 
@@ -106,7 +106,7 @@ public class FufileRaftServerIntegrationTest {
         private boolean countDown = false;
 
         public TestRaftServer(String nodeId, InetSocketAddress localAddress, CountDownLatch latch, int clusterNum) throws IOException {
-            super(nodeId, localAddress);
+            super(nodeId, localAddress, 1);
             this.latch = latch;
             this.clusterNum = clusterNum;
         }
