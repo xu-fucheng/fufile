@@ -16,8 +16,8 @@
 
 package org.fufile.network;
 
+import org.fufile.network.SocketHandler.CheckHeartBeatHandler;
 import org.fufile.transfer.HeartbeatRequestMessage;
-import org.fufile.utils.TimerTask;
 import org.fufile.utils.TimerWheelUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,11 +26,11 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Queue;
-import java.util.Collection;
 import java.util.concurrent.ArrayBlockingQueue;
 
 public class SocketSelector extends FufileSelector implements SocketSelectable {
@@ -38,47 +38,56 @@ public class SocketSelector extends FufileSelector implements SocketSelectable {
     private final static Logger logger = LoggerFactory.getLogger(SocketSelector.class);
 
     private String nodeId;
-    protected final Map<String, FufileSocketChannel> connectedChannels;
-    private final LinkedHashMap<String, FufileSocketChannel> receivedChannels = new LinkedHashMap<>();
+    private boolean checkHeartbeat = false;
+    private CheckHeartBeatHandler checkHeartBeatHandler;
+    protected final Map<String, FufileSocketChannel> connectedNodes;
+    private TimerWheelUtil timerWheelUtil;
     private final int connectionQueueSize = 16;
     private final Queue<FufileSocketChannel> newConnections = new ArrayBlockingQueue(connectionQueueSize);
-    private TimerWheelUtil timerWheelUtil;
+    private final LinkedHashMap<String, FufileSocketChannel> receivedChannels = new LinkedHashMap<>();
 
     public SocketSelector() {
         super();
-        connectedChannels = new HashMap<>();
+        connectedNodes = new HashMap<>();
     }
 
-    public SocketSelector(String nodeId, Map connectedChannels, TimerWheelUtil timerWheelUtil) {
+    public SocketSelector(String nodeId,
+                          Map connectedNodes,
+                          TimerWheelUtil timerWheelUtil) {
         super();
         this.nodeId = nodeId;
-        this.connectedChannels = connectedChannels;
+        this.connectedNodes = connectedNodes;
         this.timerWheelUtil = timerWheelUtil;
+    }
+
+    public void configCheckHeartbeat(CheckHeartBeatHandler checkHeartBeatHandler) {
+        checkHeartbeat = true;
+        this.checkHeartBeatHandler = checkHeartBeatHandler;
     }
 
     @Override
     public void connect(String nodeId, InetSocketAddress address) throws IOException {
-//        if (connectedChannels.containsKey(channelId)) {
-//            logger.error("There is already a connection for channelId " + channelId);
-//            return;
-//        }
         SocketChannel socketChannel = SocketChannel.open();
         boolean connected = false;
         try {
             configureSocket(socketChannel);
             connected = doConnect(socketChannel, address);
+            FufileSocketChannel channel = new FufileSocketChannel(nodeId, socketChannel);
             if (connected) {
-                FufileSocketChannel channel = new FufileSocketChannel(nodeId, socketChannel);
                 channel.register(selector, SelectionKey.OP_READ);
-                connectedChannels.put(nodeId, channel);
-                sendHeartbeat(channel);
+                if (checkHeartbeat) {
+                    sendHeartbeat(channel);
+                } else {
+                    connectedNodes.put(nodeId, channel);
+                }
             } else {
-                FufileSocketChannel channel = new FufileSocketChannel(nodeId, socketChannel);
                 channel.register(selector, SelectionKey.OP_CONNECT);
             }
         } catch (Exception e) {
             if (connected) {
-                connectedChannels.remove(nodeId);
+                if (!checkHeartbeat) {
+                    connectedNodes.remove(nodeId);
+                }
             }
             socketChannel.close();
             throw e;
@@ -89,14 +98,9 @@ public class SocketSelector extends FufileSelector implements SocketSelectable {
      * Client sends a heartbeat when the server is successfully connected.
      */
     protected void sendHeartbeat(FufileChannel channel) {
-        send(new Sender(channel.getNodeId(), new HeartbeatRequestMessage(nodeId)));
-        timerWheelUtil.schedule(new TimerTask(2000) {
-            @Override
-            public void run() {
-                send(new Sender(channel.getNodeId(), new HeartbeatRequestMessage(nodeId)));
-                timerWheelUtil.schedule(this);
-            }
-        });
+        send(new Sender(channel.nodeId, new HeartbeatRequestMessage(nodeId)));
+        timerWheelUtil.schedule(checkHeartBeatHandler.heartbeatTask(2000, channel));
+        timerWheelUtil.schedule(checkHeartBeatHandler.checkHeartbeatTask(10000, channel));
     }
 
     /**
@@ -104,7 +108,7 @@ public class SocketSelector extends FufileSelector implements SocketSelectable {
      */
     @Override
     public boolean send(Sender sender) {
-        FufileSocketChannel socketChannel = connectedChannels.get(sender.nodeId());
+        FufileSocketChannel socketChannel = connectedNodes.get(sender.nodeId());
         if (socketChannel.addSender(sender)) {
             socketChannel.addInterestOps(SelectionKey.OP_WRITE);
             return true;
@@ -135,9 +139,9 @@ public class SocketSelector extends FufileSelector implements SocketSelectable {
             connectionsRegistered++;
             FufileSocketChannel channel = newConnections.poll();
             channel.interestOps(SelectionKey.OP_READ);
-            if (channel.getNodeId() != null) {
+            if (channel.nodeId != null) {
                 // confirm identity
-                connectedChannels.put(channel.getNodeId(), channel);
+                connectedNodes.put(channel.nodeId, channel);
                 // send heartbeat to identify
                 sendHeartbeat(channel);
             }
@@ -165,14 +169,14 @@ public class SocketSelector extends FufileSelector implements SocketSelectable {
                 // read completely
                 fufileSocketChannel.completeRead();
                 // After handle the received message, set interestOps to read.
-                receivedChannels.put(fufileSocketChannel.getNodeId(), fufileSocketChannel);
+                receivedChannels.put(fufileSocketChannel.nodeId, fufileSocketChannel);
             }
         }
     }
 
     @Override
     public void close() throws IOException {
-        for (Map.Entry<String, FufileSocketChannel> entry : connectedChannels.entrySet()) {
+        for (Map.Entry<String, FufileSocketChannel> entry : connectedNodes.entrySet()) {
             entry.getValue().close();
         }
         super.closeSelector();
@@ -180,7 +184,7 @@ public class SocketSelector extends FufileSelector implements SocketSelectable {
 
     @Override
     public int connectedChannelsSize() {
-        return connectedChannels.size();
+        return connectedNodes.size();
     }
 
     @Override

@@ -19,6 +19,7 @@ package org.fufile.network;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.net.InetSocketAddress;
@@ -40,6 +41,7 @@ public class ServerSocketSelectorTest {
         selectable.close();
     }
 
+    @Disabled
     @Test
     public void testWholeProcess() throws Exception {
         Socket socket = new Socket("localhost", port);

@@ -14,35 +14,9 @@
  * under the License.
  */
 
-package org.fufile.server;
+package org.fufile.network;
 
-public class ServerNode {
+public interface SystemType {
 
-    private final int id;
-    private final String idString;
-    private final String hostname;
-    private final int port;
-
-    public ServerNode(int id, String hostname, int port) {
-        this.id = id;
-        this.idString = Integer.toString(id);
-        this.hostname = hostname;
-        this.port = port;
-    }
-
-    public int getId() {
-        return id;
-    }
-
-    public String getIdString() {
-        return idString;
-    }
-
-    public String getHostname() {
-        return hostname;
-    }
-
-    public int getPort() {
-        return port;
-    }
+    void handleMessage();
 }

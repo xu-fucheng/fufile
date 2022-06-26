@@ -44,6 +44,7 @@ public class FufileSocketChannel extends FufileChannel {
     private final ReceivedDataHandler receivedDataHandler;
     private Sender sender;
     private Receiver receiver;
+    private boolean confirmConnection = false;
 
     public FufileSocketChannel(String channelId, SelectableChannel socketChannel) {
         super(channelId, socketChannel);

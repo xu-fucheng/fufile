@@ -17,7 +17,7 @@
 package org.fufile.integration;
 
 import org.fufile.server.FufileRaftServer;
-import org.fufile.server.ServerNode;
+import org.fufile.network.ServerNode;
 import org.fufile.utils.FufileThread;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -47,7 +47,7 @@ public class FufileRaftServerIntegrationTest {
      * test cluster connection
      * three nodes
      */
-//    @Disabled
+    @Disabled
     @ParameterizedTest
     @MethodSource("rangeClusterNum")
     @Timeout(60)

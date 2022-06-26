@@ -17,7 +17,9 @@
 package org.fufile.server;
 
 import org.fufile.network.FufileSocketChannel;
+import org.fufile.network.ServerNode;
 import org.fufile.network.ServerSocketSelector;
+import org.fufile.network.SocketHandler;
 import org.fufile.transfer.LeaderHeartbeatRequestMessage;
 import org.fufile.utils.FufileThread;
 import org.fufile.utils.TimerTask;
@@ -84,7 +86,7 @@ public class FufileRaftServer implements Runnable {
         serverSocketSelector = new ServerSocketSelector(localAddress);
         socketHandlers = new SocketHandler[SOCKET_PROCESS_THREAD_NUM];
         for (int i = 0; i < socketHandlers.length; i++) {
-            socketHandlers[i] = new SocketHandler(nodeId, connectedChannels);
+//            socketHandlers[i] = new SocketHandler(i, nodeId, connectedChannels);
         }
     }
 
@@ -92,7 +94,7 @@ public class FufileRaftServer implements Runnable {
         serverSocketSelector = new ServerSocketSelector(localAddress);
         socketHandlers = new SocketHandler[socketProcessThreadNum];
         for (int i = 0; i < socketHandlers.length; i++) {
-            socketHandlers[i] = new SocketHandler(nodeId, connectedChannels);
+//            socketHandlers[i] = new SocketHandler(i, nodeId, connectedChannels);
         }
     }
 

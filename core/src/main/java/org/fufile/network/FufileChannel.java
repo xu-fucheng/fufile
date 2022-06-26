@@ -25,7 +25,7 @@ import java.nio.channels.SelectionKey;
  */
 public abstract class FufileChannel {
 
-    private final String nodeId;
+    final String nodeId;
     protected SelectionKey selectionKey;
     protected final SelectableChannel channel;
 
@@ -36,10 +36,6 @@ public abstract class FufileChannel {
 
     public SelectableChannel channel() {
         return channel;
-    }
-
-    public String getNodeId() {
-        return nodeId;
     }
 
     public void addInterestOps(int ops) {
