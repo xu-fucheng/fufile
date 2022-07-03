@@ -38,9 +38,9 @@ public class SocketSelector extends FufileSelector implements SocketSelectable {
     private final static Logger logger = LoggerFactory.getLogger(SocketSelector.class);
 
     private String nodeId;
+    protected final Map<String, FufileSocketChannel> connectedNodes;
     private boolean checkHeartbeat = false;
     private CheckHeartBeatHandler checkHeartBeatHandler;
-    protected final Map<String, FufileSocketChannel> connectedNodes;
     private TimerWheelUtil timerWheelUtil;
     private final int connectionQueueSize = 16;
     private final Queue<FufileSocketChannel> newConnections = new ArrayBlockingQueue(connectionQueueSize);
@@ -72,7 +72,8 @@ public class SocketSelector extends FufileSelector implements SocketSelectable {
         try {
             configureSocket(socketChannel);
             connected = doConnect(socketChannel, address);
-            FufileSocketChannel channel = new FufileSocketChannel(nodeId, socketChannel);
+            FufileSocketChannel channel = new FufileSocketChannel(nodeId, socketChannel, false);
+            channel.timerWheelUtil(timerWheelUtil);
             if (connected) {
                 channel.register(selector, SelectionKey.OP_READ);
                 if (checkHeartbeat) {
@@ -95,33 +96,6 @@ public class SocketSelector extends FufileSelector implements SocketSelectable {
     }
 
     /**
-     * Client sends a heartbeat when the server is successfully connected.
-     */
-    protected void sendHeartbeat(FufileChannel channel) {
-        send(new Sender(channel.nodeId, new HeartbeatRequestMessage(nodeId)));
-        timerWheelUtil.schedule(checkHeartBeatHandler.heartbeatTask(2000, channel));
-        timerWheelUtil.schedule(checkHeartBeatHandler.checkHeartbeatTask(10000, channel));
-    }
-
-    /**
-     *
-     */
-    @Override
-    public boolean send(Sender sender) {
-        FufileSocketChannel socketChannel = connectedNodes.get(sender.nodeId());
-        if (socketChannel.addSender(sender)) {
-            socketChannel.addInterestOps(SelectionKey.OP_WRITE);
-            return true;
-        }
-        return false;
-    }
-
-    @Override
-    public void doPool(long timeout) throws IOException {
-        pool(timeout);
-    }
-
-    /**
      * anonymity connection
      */
     public boolean allocateNewConnections(FufileSocketChannel channel) throws IOException {
@@ -139,13 +113,38 @@ public class SocketSelector extends FufileSelector implements SocketSelectable {
             connectionsRegistered++;
             FufileSocketChannel channel = newConnections.poll();
             channel.interestOps(SelectionKey.OP_READ);
-            if (channel.nodeId != null) {
-                // confirm identity
-                connectedNodes.put(channel.nodeId, channel);
+            if (channel.toClient()) {
+                checkHeartBeatHandler.scheduleHeartbeatTimeoutTask(channel);
+            } else {
                 // send heartbeat to identify
                 sendHeartbeat(channel);
             }
         }
+    }
+
+    /**
+     * Client sends a heartbeat when the server is successfully connected.
+     */
+    protected void sendHeartbeat(FufileChannel channel) {
+        send(new Sender(channel.nodeId(), new HeartbeatRequestMessage(nodeId)));
+        checkHeartBeatHandler.scheduleHeartbeatTask(channel);
+        if (!checkHeartBeatHandler.containsCheckHeartbeatTask(channel.nodeId())) {
+            checkHeartBeatHandler.scheduleHeartbeatTimeoutTask(channel);
+        }
+    }
+
+    /**
+     *
+     */
+    @Override
+    public void send(Sender sender) {
+        FufileSocketChannel socketChannel = connectedNodes.get(sender.nodeId());
+        socketChannel.send(sender);
+    }
+
+    @Override
+    public void doPool(long timeout) throws IOException {
+        pool(timeout);
     }
 
     @Override
@@ -169,7 +168,7 @@ public class SocketSelector extends FufileSelector implements SocketSelectable {
                 // read completely
                 fufileSocketChannel.completeRead();
                 // After handle the received message, set interestOps to read.
-                receivedChannels.put(fufileSocketChannel.nodeId, fufileSocketChannel);
+                receivedChannels.put(fufileSocketChannel.nodeId(), fufileSocketChannel);
             }
         }
     }

@@ -20,7 +20,7 @@ public abstract class TimerTask implements Runnable {
 
     final long delayMs;
     private long executeMs;
-    private boolean isDeleted = false;
+    boolean cancelled = false;
 
     public TimerTask(long delayMs) {
         this.delayMs = delayMs;
@@ -34,11 +34,11 @@ public abstract class TimerTask implements Runnable {
         this.executeMs = executeMs;
     }
 
-    public boolean isDeleted() {
-        return isDeleted;
+    public boolean cancelled() {
+        return cancelled;
     }
 
-    public void setDeleted(boolean deleted) {
-        isDeleted = deleted;
+    public void cancel() {
+        this.cancelled = true;
     }
 }

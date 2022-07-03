@@ -21,6 +21,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
@@ -34,9 +35,10 @@ public class ServerSocketSelector extends FufileSelector implements ServerSocket
 
     private static final Logger logger = LoggerFactory.getLogger(ServerSocketSelector.class);
 
-    private ArrayList newConnections;
-    private final int maxConnectionsPerSelect = 8;
+    private final ArrayList newConnections;
     private FufileServerSocketChannel channel;
+    private final int maxConnectionsPerSelect = 8;
+    private int connectionIndex = 0;
 
     public ServerSocketSelector(InetSocketAddress address) throws IOException {
         super();
@@ -57,7 +59,7 @@ public class ServerSocketSelector extends FufileSelector implements ServerSocket
                 socketChannel.configureBlocking(false);
                 socketChannel.socket().setKeepAlive(true);
                 socketChannel.socket().setTcpNoDelay(true);
-                FufileChannel channel = new FufileSocketChannel(null, socketChannel);
+                FufileChannel channel = new FufileSocketChannel(nodeId(socketChannel.socket()), socketChannel, true);
                 newConnections.add(channel);
             }
         }
@@ -77,9 +79,18 @@ public class ServerSocketSelector extends FufileSelector implements ServerSocket
         return newConnections;
     }
 
-    @Override
-    public void close() throws Exception {
-
+    private String nodeId(Socket socket) {
+        String remoteHost = socket.getInetAddress().getHostAddress();
+        int remotePort = socket.getPort();
+        StringBuilder nodeIdBuilder = new StringBuilder();
+        String nodeId = nodeIdBuilder
+                .append(remoteHost)
+                .append(":")
+                .append(remotePort)
+                .append("-")
+                .append(connectionIndex).toString();
+        connectionIndex = connectionIndex == Integer.MAX_VALUE ? 0 : connectionIndex + 1;
+        return nodeId;
     }
 
     @Override
@@ -90,5 +101,10 @@ public class ServerSocketSelector extends FufileSelector implements ServerSocket
     @Override
     public FufileServerSocketChannel getFufileServerSocketChannel() {
         return channel;
+    }
+
+    @Override
+    public void close() throws Exception {
+
     }
 }

@@ -16,5 +16,38 @@
 
 package org.fufile.config;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
+
 public class FufileConfig {
+    private final Properties properties;
+    private final  Map<String, Object> configs = new HashMap<>();
+
+    public FufileConfig(Properties properties) {
+        this.properties = properties;
+    }
+
+    public FufileConfig config(ConfigDefinition configDefinition) {
+        String value = properties.getProperty(configDefinition.name);
+
+
+        if (value != null) {
+            configs.put(configDefinition.name, value);
+        }
+
+        return this;
+    }
+
+    public Integer getInt(String key) {
+        return (Integer) configs.get(key);
+    }
+
+    public String getString(String key) {
+        return (String) configs.get(key);
+    }
+
+    public Long getLong(String key) {
+        return (Long) configs.get(key);
+    }
 }

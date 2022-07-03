@@ -16,5 +16,13 @@
 
 package org.fufile.raft;
 
-public class CandidateState implements MembershipState {
+import org.fufile.network.FufileSocketChannel;
+import org.fufile.transfer.FufileMessage;
+
+public interface MembershipState {
+
+
+    void handleRequestMessage(FufileMessage message, FufileSocketChannel channel);
+
+    void handleResponseMessage(FufileMessage message, FufileSocketChannel channel);
 }

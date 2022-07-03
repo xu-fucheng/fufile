@@ -16,6 +16,7 @@
 
 package org.fufile.network;
 
+import org.fufile.config.FufileConfig;
 import org.fufile.utils.FufileThread;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,11 +36,13 @@ public class SocketReactorServer implements Runnable {
     private static final Logger logger = LoggerFactory.getLogger(SocketReactorServer.class);
 
     private ServerSocketSelector serverSocketSelector;
-    private int index;
+    private int index = 0;
     private SocketHandler[] socketHandlers;
     private Map<String, Integer> nodeIdHandlerIdMap = new ConcurrentHashMap<>();
 
     public SocketReactorServer(String nodeId,
+                               FufileConfig config,
+                               SystemType systemType,
                                boolean checkHeartbeat,
                                InetSocketAddress localAddress,
                                int socketProcessThreadNum) throws IOException {
@@ -47,16 +50,18 @@ public class SocketReactorServer implements Runnable {
         socketHandlers = new SocketHandler[socketProcessThreadNum];
         Map<String, FufileSocketChannel> connectedNodes = new ConcurrentHashMap<>();
         for (int i = 0; i < socketHandlers.length; i++) {
-            socketHandlers[i] = new SocketHandler(i, nodeId, checkHeartbeat, connectedNodes, nodeIdHandlerIdMap);
+            socketHandlers[i] = new SocketHandler(i, nodeId, config, systemType, checkHeartbeat, connectedNodes, nodeIdHandlerIdMap);
         }
     }
 
     public SocketReactorServer(String nodeId,
+                               FufileConfig config,
+                               SystemType systemType,
                                boolean checkHeartbeat,
                                InetSocketAddress localAddress,
                                int socketProcessThreadNum,
                                List<ServerNode> nodesNeedingConnect) throws IOException {
-        this(nodeId, checkHeartbeat, localAddress, socketProcessThreadNum);
+        this(nodeId, config, systemType, checkHeartbeat, localAddress, socketProcessThreadNum);
         allocateConnections(nodesNeedingConnect);
     }
 
@@ -74,8 +79,6 @@ public class SocketReactorServer implements Runnable {
 
 
         for (; ; ) {
-
-
 
             try {
                 serverSocketSelector.doPool(500);

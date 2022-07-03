@@ -16,5 +16,18 @@
 
 package org.fufile.raft;
 
-public class LeaderState implements MembershipState {
+import org.fufile.network.FufileSocketChannel;
+import org.fufile.transfer.FufileMessage;
+
+public class CandidateState implements MembershipState {
+
+    @Override
+    public void handleRequestMessage(FufileMessage message, FufileSocketChannel channel) {
+
+    }
+
+    @Override
+    public void handleResponseMessage(FufileMessage message, FufileSocketChannel channel) {
+
+    }
 }

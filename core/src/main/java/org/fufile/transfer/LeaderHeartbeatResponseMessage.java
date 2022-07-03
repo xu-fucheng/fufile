@@ -21,10 +21,17 @@ import java.nio.ByteBuffer;
 
 public class LeaderHeartbeatResponseMessage implements FufileMessage {
 
+    private boolean accept;
+
+
     private ByteBuffer payload;
 
     public LeaderHeartbeatResponseMessage(ByteBuffer payload) {
         this.payload = payload;
+    }
+
+    public LeaderHeartbeatResponseMessage(boolean accept) {
+        this.accept = accept;
     }
 
     @Override

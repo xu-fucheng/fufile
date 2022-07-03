@@ -14,14 +14,11 @@
  * under the License.
  */
 
-package org.fufile.raft;
+package org.fufile.config;
 
-import org.fufile.network.SystemType;
+public class ConfigKeys {
 
-public class RaftSystem implements SystemType {
+    public static final String HEARTBEAT_INTERVAL = "heartbeat.interval.ms";
+    public static final String HEARTBEAT_TIMEOUT = "heartbeat.timeout.ms";
 
-    @Override
-    public void handleMessage() {
-
-    }
 }

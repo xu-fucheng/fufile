@@ -81,12 +81,12 @@ public class SocketSelectorTest {
                 String[] messageArray = message.message().split(":");
                 Assertions.assertEquals("number", messageArray[0]);
                 Integer number = Integer.parseInt(messageArray[1]);
-                int channelId = Integer.parseInt(channel.nodeId);
+                int channelId = Integer.parseInt(channel.nodeId());
                 int receivedNumber = receiveCount[channelId];
                 Assertions.assertEquals(receivedNumber, number);
                 receiveCount[channelId] = receivedNumber + 1;
                 if (receiveCount[channelId] != sendNumber) {
-                    selectable.send(new Sender(channel.nodeId, new TestStringMessage("number:" + receiveCount[channelId])));
+                    selectable.send(new Sender(channel.nodeId(), new TestStringMessage("number:" + receiveCount[channelId])));
                 }
                 iterator.remove();
             }

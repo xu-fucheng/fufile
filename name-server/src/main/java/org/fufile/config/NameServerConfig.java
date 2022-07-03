@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package org.fufile.raft;
+package org.fufile.config;
 
-public interface MembershipState {
+public class NameServerConfig {
 }

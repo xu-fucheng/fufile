@@ -17,6 +17,8 @@
 package org.fufile.network;
 
 import org.fufile.errors.IllegalNetDataException;
+import org.fufile.utils.TimerTask;
+import org.fufile.utils.TimerWheelUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,17 +41,21 @@ public class FufileSocketChannel extends FufileChannel {
 
     private final static Logger logger = LoggerFactory.getLogger(FufileSocketChannel.class);
 
-    private final ByteBuffer size;
+    private final ByteBuffer size = ByteBuffer.allocate(4);
     private ByteBuffer payload;
-    private final ReceivedDataHandler receivedDataHandler;
     private Sender sender;
     private Receiver receiver;
     private boolean confirmConnection = false;
+    private boolean toClient;
+    private TimerWheelUtil timerWheelUtil;
 
-    public FufileSocketChannel(String channelId, SelectableChannel socketChannel) {
-        super(channelId, socketChannel);
-        size = ByteBuffer.allocate(4);
-        receivedDataHandler = new ReceivedDataHandler();
+    public FufileSocketChannel(String nodeId, SelectableChannel socketChannel, boolean toClient) {
+        super(nodeId, socketChannel);
+        this.toClient = toClient;
+    }
+
+    public void timerWheelUtil(TimerWheelUtil timerWheelUtil) {
+        this.timerWheelUtil = timerWheelUtil;
     }
 
     /**
@@ -81,13 +87,22 @@ public class FufileSocketChannel extends FufileChannel {
         }
     }
 
-    public boolean addSender(Sender sender) {
+    public void send(Sender sender) {
         if (this.sender != null) {
-            return false;
+            // schedule in 200ms
+            timerWheelUtil.schedule(new TimerTask(200) {
+                @Override
+                public void run() {
+                    send(sender);
+                }
+            });
+        } else {
+            this.sender = sender;
+            addInterestOps(SelectionKey.OP_WRITE);
         }
-        this.sender = sender;
-        return true;
     }
+
+
 
     public void register(Selector sel, int ops) throws IOException {
         if (!channel.isRegistered()) {
@@ -147,5 +162,17 @@ public class FufileSocketChannel extends FufileChannel {
         this.receiver = null;
         interestOps(SelectionKey.OP_READ);
         return receiver;
+    }
+
+    public boolean confirmConnection() {
+        if (!confirmConnection) {
+            this.confirmConnection = true;
+            return false;
+        }
+        return true;
+    }
+
+    public boolean toClient() {
+        return toClient;
     }
 }

@@ -14,13 +14,21 @@
  * under the License.
  */
 
-package org.fufile.network;
+package org.fufile.raft;
 
+import org.fufile.network.FufileSocketChannel;
 import org.fufile.transfer.FufileMessage;
 
-public interface SystemType {
+public class LeaderState implements MembershipState {
 
-    void handleRequestMessage(FufileMessage message, FufileSocketChannel channel);
 
-    void handleResponseMessage(FufileMessage message, FufileSocketChannel channel);
+    @Override
+    public void handleRequestMessage(FufileMessage message, FufileSocketChannel channel) {
+
+    }
+
+    @Override
+    public void handleResponseMessage(FufileMessage message, FufileSocketChannel channel) {
+
+    }
 }

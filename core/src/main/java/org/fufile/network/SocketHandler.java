@@ -16,8 +16,10 @@
 
 package org.fufile.network;
 
+import org.fufile.config.FufileConfig;
 import org.fufile.transfer.FufileMessage;
 import org.fufile.transfer.HeartbeatRequestMessage;
+import org.fufile.transfer.HeartbeatResponseMessage;
 import org.fufile.utils.FufileThread;
 import org.fufile.utils.TimerTask;
 import org.fufile.utils.TimerWheelUtil;
@@ -35,6 +37,9 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import static org.fufile.config.ConfigKeys.HEARTBEAT_INTERVAL;
+import static org.fufile.config.ConfigKeys.HEARTBEAT_TIMEOUT;
+
 /**
  *
  */
@@ -44,6 +49,7 @@ public class SocketHandler implements Runnable {
 
     private final int handlerId;
     private final String nodeId;
+    private final SystemType systemType;
     private final boolean checkHeartbeat;
     private CheckHeartBeatHandler checkHeartBeatHandler;
     private final Map<String, FufileSocketChannel> connectedNodes;
@@ -52,28 +58,34 @@ public class SocketHandler implements Runnable {
     private final Queue<TimerTask> taskQueue = new LinkedBlockingQueue();
     private final TimerWheelUtil timerWheelUtil = new TimerWheelUtil(10, 60, 100, taskQueue);
     private final Map<String, ServerNode> nodesNeedingConnect = new HashMap<>();
-
-    private long heartbeatInterval = 2 * 1000;
-    private long heartbeatTimeout = 10 * 1000;
+    private final Set<ServerNode> reconnectionNodes = new HashSet<>();
 
     public SocketHandler(int handlerId,
                          String nodeId,
+                         FufileConfig config,
+                         SystemType systemType,
                          boolean checkHeartbeat,
                          Map<String, FufileSocketChannel> connectedNodes,
                          Map<String, Integer> nodeIdHandlerIdMap) {
         this.handlerId = handlerId;
         this.nodeId = nodeId;
+        this.systemType = systemType;
         this.checkHeartbeat = checkHeartbeat;
         this.connectedNodes = connectedNodes;
         this.nodeIdHandlerIdMap = nodeIdHandlerIdMap;
         this.socketSelector = new SocketSelector(nodeId, connectedNodes, timerWheelUtil);
         if (checkHeartbeat) {
-            checkHeartBeatHandler = new CheckHeartBeatHandler(socketSelector);
+            checkHeartBeatHandler = new CheckHeartBeatHandler(
+                    socketSelector,
+                    timerWheelUtil,
+                    config.getLong(HEARTBEAT_INTERVAL),
+                    config.getLong(HEARTBEAT_TIMEOUT));
             socketSelector.configCheckHeartbeat(checkHeartBeatHandler);
         }
     }
 
     public boolean allocateNewConnections(FufileSocketChannel channel) throws IOException {
+        channel.timerWheelUtil(timerWheelUtil);
         return socketSelector.allocateNewConnections(channel);
     }
 
@@ -90,21 +102,20 @@ public class SocketHandler implements Runnable {
                 for (ServerNode node : nodesNeedingConnect.values()) {
                     socketSelector.connect(node.getIdString(), new InetSocketAddress(node.getHostname(), node.getPort()));
                 }
-            }
 
+            }
 
             for (; ; ) {
                 try {
                     while (!taskQueue.isEmpty()) {
                         TimerTask task = taskQueue.poll();
-                        task.run();
+                        if (!task.cancelled()) {
+                            task.run();
+                        }
                     }
-                    socketSelector.doPool(500);
+                    socketSelector.doPool(0);
                     socketSelector.registerNewConnections();
-                    // write read
                     handleReceive();
-
-                    // get receives
 
 
                     // heartbeat timeout
@@ -130,9 +141,9 @@ public class SocketHandler implements Runnable {
             FufileSocketChannel channel = channelIterator.next();
             Receiver receiver = channel.getReceiver();
             if (receiver.messageType == Receiver.REQUEST) {
-                handleRequest(receiver, channel);
+                handleRequest(receiver.message(), channel);
             } else if (receiver.messageType == Receiver.RESPONSE) {
-                handleResponse(receiver, channel);
+                handleResponse(receiver.message(), channel);
             }
 
             channelIterator.remove();
@@ -141,15 +152,12 @@ public class SocketHandler implements Runnable {
 
     }
 
-    private void handleResponse(Receiver receiver, FufileSocketChannel channel) {
-
-    }
-
-    private void handleRequest(Receiver receiver, FufileSocketChannel channel) throws IOException {
-        FufileMessage message = receiver.message();
+    private void handleRequest(FufileMessage message, FufileSocketChannel channel) throws IOException {
         if (message instanceof HeartbeatRequestMessage) {
             HeartbeatRequestMessage heartbeatRequestMessage = (HeartbeatRequestMessage) message;
-            if (channel.nodeId == null) {
+            checkHeartBeatHandler.cancelHeartbeatTimeout(channel.nodeId());
+            if (!channel.confirmConnection()) {
+                channel.nodeId(heartbeatRequestMessage.nodeId());
                 if (connectedNodes.containsKey(heartbeatRequestMessage.nodeId())) {
                     // old connection
                     // if the old connection is in other handler
@@ -158,66 +166,97 @@ public class SocketHandler implements Runnable {
                 connectedNodes.put(heartbeatRequestMessage.nodeId(), channel);
                 nodeIdHandlerIdMap.put(heartbeatRequestMessage.nodeId(), handlerId);
             }
-
+            checkHeartBeatHandler.scheduleHeartbeatTimeoutTask(channel);
+        } else {
+            systemType.handleRequestMessage(message, channel);
         }
 
-
     }
 
-    private TimerTask heartbeatTask(long delayMs, FufileSocketChannel channel) {
-        return new TimerTask(delayMs) {
-            @Override
-            public void run() {
-                socketSelector.send(new Sender(channel.nodeId, new HeartbeatRequestMessage(nodeId)));
-                timerWheelUtil.schedule(this);
+    private void handleResponse(FufileMessage message, FufileSocketChannel channel) {
+        if (message instanceof HeartbeatResponseMessage) {
+            HeartbeatResponseMessage heartbeatResponseMessage = (HeartbeatResponseMessage) message;
+            checkHeartBeatHandler.cancelHeartbeatTimeout(channel.nodeId());
+            if (!channel.confirmConnection()) {
+                connectedNodes.put(channel.nodeId(), channel);
+                nodeIdHandlerIdMap.put(channel.nodeId(), handlerId);
             }
-        };
-    }
-
-    private TimerTask checkHeartbeatTask(long delayMs, FufileSocketChannel channel) {
-        return new TimerTask(10000) {
-            @Override
-            public void run() {
-                // check heartbeatTimeout
-            }
-
-
-        };
+        } else {
+            systemType.handleResponseMessage(message, channel);
+        }
     }
 
     class CheckHeartBeatHandler {
 
         private final SocketSelector socketSelector;
-        private Map<String, TimerTask> checkHeartbeatTask;
-        private Set<String> nodesNotCheckHeartbeat;
+        private final TimerWheelUtil timerWheelUtil;
+        private final Map<String, TimerTask> heartbeatTimeoutTask;
+        private final Set<String> nodesNotCheckHeartbeat;
+        private final long heartbeatInterval;
+        private final long heartbeatTimeout;
 
-        public CheckHeartBeatHandler(SocketSelector socketSelector) {
+
+        public CheckHeartBeatHandler(SocketSelector socketSelector,
+                                     TimerWheelUtil timerWheelUtil,
+                                     long heartbeatInterval,
+                                     long heartbeatTimeout) {
             this.socketSelector = socketSelector;
-            checkHeartbeatTask = new HashMap<>();
+            this.timerWheelUtil = timerWheelUtil;
+            this.heartbeatInterval = heartbeatInterval;
+            this.heartbeatTimeout = heartbeatTimeout;
+            heartbeatTimeoutTask = new HashMap<>();
             nodesNotCheckHeartbeat = new HashSet();
         }
 
-        public TimerTask heartbeatTask(long delayMs, FufileChannel channel) {
-            return new TimerTask(delayMs) {
+        public void scheduleHeartbeatTask(FufileChannel channel) {
+            timerWheelUtil.schedule(heartbeatTask(channel));
+        }
+
+        private TimerTask heartbeatTask(FufileChannel channel) {
+            return new TimerTask(heartbeatInterval) {
                 @Override
                 public void run() {
-                    socketSelector.send(new Sender(channel.nodeId, new HeartbeatRequestMessage(nodeId)));
+                    socketSelector.send(new Sender(channel.nodeId(), new HeartbeatRequestMessage(nodeId)));
                     timerWheelUtil.schedule(this);
                 }
             };
         }
 
-        public TimerTask checkHeartbeatTask(long delayMs, FufileChannel channel) {
-            TimerTask task = new TimerTask(10000) {
+        public void scheduleHeartbeatTimeoutTask(FufileChannel channel) {
+            timerWheelUtil.schedule(heartbeatTimeoutTask(channel));
+        }
+
+        private TimerTask heartbeatTimeoutTask(FufileChannel channel) {
+            TimerTask task = new TimerTask(heartbeatTimeout) {
                 @Override
                 public void run() {
-                    // check heartbeatTimeout
+
+                    try {
+                        channel.close();
+                        connectedNodes.remove(channel.nodeId());
+                        if (nodesNeedingConnect.containsKey(channel.nodeId())) {
+                            reconnectionNodes.add(nodesNeedingConnect.get(channel.nodeId()));
+                        }
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+
                 }
-
-
             };
-            checkHeartbeatTask.put(channel.nodeId, task);
+            heartbeatTimeoutTask.put(channel.nodeId(), task);
             return task;
+        }
+
+        public boolean containsCheckHeartbeatTask(String nodeId) {
+            return heartbeatTimeoutTask.containsKey(nodeId);
+        }
+
+        public void cancelHeartbeatTimeout(String nodeId) {
+            TimerTask task = heartbeatTimeoutTask.get(nodeId);
+            if (task != null) {
+                task.cancel();
+                heartbeatTimeoutTask.remove(nodeId);
+            }
         }
     }
 }

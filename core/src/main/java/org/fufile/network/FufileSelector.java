@@ -46,7 +46,7 @@ public abstract class FufileSelector {
 
     public void pool(long timeout) throws IOException {
         if (timeout <= 0) {
-            selector.select();
+            selector.selectNow();
         } else {
             selector.select(timeout);
         }

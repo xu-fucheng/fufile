@@ -21,6 +21,9 @@ import java.nio.ByteBuffer;
 
 public class LeaderHeartbeatRequestMessage implements FufileMessage {
 
+    private String nodeId;
+    private int term;
+
     private ByteBuffer payload;
 
     public LeaderHeartbeatRequestMessage(ByteBuffer payload) {
@@ -35,5 +38,13 @@ public class LeaderHeartbeatRequestMessage implements FufileMessage {
     @Override
     public void deserialize() throws UnsupportedEncodingException {
 
+    }
+
+    public String nodeId() {
+        return nodeId;
+    }
+
+    public int term() {
+        return term;
     }
 }

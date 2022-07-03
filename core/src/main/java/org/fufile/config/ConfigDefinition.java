@@ -14,7 +14,29 @@
  * under the License.
  */
 
-package org.fufile.raft;
+package org.fufile.config;
 
-public class FollowerState implements MembershipState {
+public enum ConfigDefinition {
+    HEARTBEAT_INTERVAL(ConfigKeys.HEARTBEAT_INTERVAL, Type.LONG, 2000, ""),
+    HEARTBEAT_TIMEOUT(ConfigKeys.HEARTBEAT_TIMEOUT, Type.LONG, 10000, "");
+
+    public final String name;
+    public final Type type;
+    public final Object defaultValue;
+    public final String doc;
+
+    ConfigDefinition(String name, Type type, Object defaultValue, String doc) {
+        this.name = name;
+        this.type = type;
+        this.defaultValue = defaultValue;
+        this.doc = doc;
+    }
+
+    enum Type {
+        INT,
+        LONG,
+        STRING,
+        LIST;
+
+    }
 }
