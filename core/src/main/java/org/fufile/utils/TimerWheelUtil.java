@@ -39,6 +39,13 @@ public class TimerWheelUtil implements Runnable {
     }
 
     public void schedule(TimerTask task) {
+        if (task.delayMs() <= 0L) {
+            if (!tasks.offer(task)) {
+                task.delayMs(100);
+            } else {
+                return;
+            }
+        }
         if (!lowerWheel.addLowerWheel(task)) {
             if (!upperWheel.addUpperWheel(task)) {
                 schedule(task);
@@ -49,7 +56,7 @@ public class TimerWheelUtil implements Runnable {
     @Override
     public void run() {
         try {
-            for (;;) {
+            for (; ; ) {
                 lowerWheel.runLowerWheel(tasks);
                 LinkedList<TimerTask> tasks = upperWheel.toggleUpperWheel();
                 if (!tasks.isEmpty()) {

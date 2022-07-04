@@ -73,7 +73,7 @@ public class TimerWheelUtilTest {
                 timerWheelUtil.schedule(new TimerTask(random.nextInt(10000)) {
                     @Override
                     public void run() {
-                        assumeTrue(Math.abs(System.currentTimeMillis() - getExecuteMs()) < 20);
+                        assumeTrue(Math.abs(System.currentTimeMillis() - executeMs()) < 20);
                     }
                 });
             }

@@ -18,19 +18,27 @@ package org.fufile.utils;
 
 public abstract class TimerTask implements Runnable {
 
-    final long delayMs;
+    private long delayMs;
     private long executeMs;
-    boolean cancelled = false;
+    private boolean cancelled = false;
 
     public TimerTask(long delayMs) {
         this.delayMs = delayMs;
     }
 
-    long getExecuteMs() {
+    long delayMs() {
+        return delayMs;
+    }
+
+    void delayMs(long delayMs) {
+        this.delayMs = delayMs;
+    }
+
+    long executeMs() {
         return executeMs;
     }
 
-    void setExecuteMs(long executeMs) {
+    void executeMs(long executeMs) {
         this.executeMs = executeMs;
     }
 

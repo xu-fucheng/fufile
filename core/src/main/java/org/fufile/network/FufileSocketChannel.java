@@ -90,7 +90,7 @@ public class FufileSocketChannel extends FufileChannel {
     public void send(Sender sender) {
         if (this.sender != null) {
             // schedule in 200ms
-            timerWheelUtil.schedule(new TimerTask(200) {
+            timerWheelUtil.schedule(new TimerTask(0) {
                 @Override
                 public void run() {
                     send(sender);

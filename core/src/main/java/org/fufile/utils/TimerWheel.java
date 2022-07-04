@@ -56,14 +56,14 @@ public class TimerWheel {
      */
     public boolean addLowerWheel(TimerTask task) {
         lock.lock();
-        long executeMs = System.currentTimeMillis() + task.delayMs;
+        long executeMs = System.currentTimeMillis() + task.delayMs();
         if (executeMs > startMs + totalMs) {
             // overflow this wheel
             lock.unlock();
             return false;
         }
         // add this wheel
-        task.setExecuteMs(executeMs);
+        task.executeMs(executeMs);
         long index = Math.min((executeMs - startMs) / tickMs, bucketSize - 1);
         LinkedList<TimerTask> bucket = buckets[(int) index];
         synchronized (bucket) {
@@ -77,7 +77,7 @@ public class TimerWheel {
     protected void addLowerWheel(LinkedList<TimerTask> tasks) {
         for (TimerTask task : tasks) {
             // add this wheel
-            long index = Math.min((task.getExecuteMs() - startMs) / tickMs, bucketSize - 1);
+            long index = Math.min((task.executeMs() - startMs) / tickMs, bucketSize - 1);
             LinkedList<TimerTask> bucket = buckets[(int) index];
             synchronized (bucket) {
                 bucket.offer(task);
@@ -137,7 +137,7 @@ public class TimerWheel {
 
     public boolean addUpperWheel(TimerTask task) {
         lock.lock();
-        long executeMs = System.currentTimeMillis() + task.delayMs;
+        long executeMs = System.currentTimeMillis() + task.delayMs();
         if (executeMs - startMs > totalMs) {
             lock.unlock();
             throw new RuntimeException("The delay time exceeds the maximum timer wheel range !");
@@ -146,7 +146,7 @@ public class TimerWheel {
             lock.unlock();
             return false;
         }
-        task.setExecuteMs(executeMs);
+        task.executeMs(executeMs);
         long index = Math.min((executeMs - startMs) / tickMs, bucketSize - 1) + currentIndex;
         if (index > bucketSize - 1) {
             index = index - bucketSize;

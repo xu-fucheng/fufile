@@ -55,7 +55,7 @@ public class SocketHandler implements Runnable {
     private final Map<String, FufileSocketChannel> connectedNodes;
     private final Map<String, Integer> nodeIdHandlerIdMap;
     private final SocketSelector socketSelector;
-    private final Queue<TimerTask> taskQueue = new LinkedBlockingQueue();
+    private final Queue<TimerTask> taskQueue = new LinkedBlockingQueue(16);
     private final TimerWheelUtil timerWheelUtil = new TimerWheelUtil(10, 60, 100, taskQueue);
     private final Map<String, ServerNode> nodesNeedingConnect = new HashMap<>();
     private final Set<ServerNode> reconnectionNodes = new HashSet<>();
@@ -107,19 +107,18 @@ public class SocketHandler implements Runnable {
 
             for (; ; ) {
                 try {
-                    while (!taskQueue.isEmpty()) {
+                    int taskSize = taskQueue.size();
+                    for (int i = 0; i < taskSize; i++) {
                         TimerTask task = taskQueue.poll();
                         if (!task.cancelled()) {
                             task.run();
                         }
                     }
-                    socketSelector.doPool(0);
-                    socketSelector.registerNewConnections();
+
                     handleReceive();
 
-
-                    // heartbeat timeout
-                    // If leader's connection election timeout, notify FufileRaftServer to launch election.
+                    socketSelector.doPool(0);
+                    socketSelector.registerNewConnections();
 
 
                 } catch (IOException e) {
