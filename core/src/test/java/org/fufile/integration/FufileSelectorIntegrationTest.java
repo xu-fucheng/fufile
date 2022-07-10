@@ -54,9 +54,9 @@ public class FufileSelectorIntegrationTest {
 
         socketSelector.doPool(0);
         socketSelector.registerNewConnections();
-        socketSelector.send(new Sender("", new TestStringMessage("100")));
+        socketSelector.send("", new Sender(new TestStringMessage("100")));
         socketSelector.doPool(0);
-        socketSelector.send(new Sender("", new TestStringMessage("100")));
+        socketSelector.send("", new Sender(new TestStringMessage("100")));
         socketSelector.doPool(0);
         serverSelector.pool(0);
         Thread.sleep(10000);

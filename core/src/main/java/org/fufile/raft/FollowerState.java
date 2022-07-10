@@ -23,6 +23,7 @@ import org.fufile.raft.RaftSystem.RaftProperties;
 import org.fufile.transfer.FufileMessage;
 import org.fufile.transfer.LeaderHeartbeatRequestMessage;
 import org.fufile.transfer.LeaderHeartbeatResponseMessage;
+import org.fufile.transfer.VoteRequestMessage;
 import org.fufile.utils.TimerTask;
 import org.fufile.utils.TimerWheelUtil;
 
@@ -62,13 +63,14 @@ public class FollowerState implements MembershipState {
             LeaderHeartbeatRequestMessage leaderHeartbeatRequestMessage = (LeaderHeartbeatRequestMessage) message;
             if (leaderHeartbeatRequestMessage.term() < properties.term()) {
                 // reject
-                channel.send(new Sender(channel.nodeId(), new LeaderHeartbeatResponseMessage(false)));
+                channel.send(new Sender(new LeaderHeartbeatResponseMessage(false)));
 
             } else {
                 if (properties.leaderId().equals(leaderHeartbeatRequestMessage.nodeId())) {
-                    channel.send(new Sender(channel.nodeId(), new LeaderHeartbeatResponseMessage(true)));
+                    channel.send(new Sender(new LeaderHeartbeatResponseMessage(true)));
                 } else {
-                    // accept or reject
+                    //
+                    channel.send(new Sender(new LeaderHeartbeatResponseMessage(true)));
                 }
 
 
@@ -101,7 +103,12 @@ public class FollowerState implements MembershipState {
                     system.transitionTo(new CandidateState());
                     properties.incrementTerm();
                     // send vote rpc to connected servers
-
+                    for (FufileSocketChannel channel : connectedNodes.values()) {
+                        channel.send(new Sender(new VoteRequestMessage(
+                                properties.term(),
+                                properties.lastTerm(),
+                                properties.lastIndex())));
+                    }
 
                 } else {
                     // The server is not eligible for election, and try again in 10s+.

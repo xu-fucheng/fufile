@@ -37,7 +37,7 @@ public interface SocketSelectable extends Selectable {
      */
     void doPool(long timeout) throws IOException;
 
-    void send(Sender sender) throws IOException;
+    void send(String nodeId, Sender sender) throws IOException;
 
     int connectedChannelsSize();
 

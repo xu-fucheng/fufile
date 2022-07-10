@@ -80,11 +80,12 @@ public class RaftSystem implements SystemType {
 
 
     class RaftProperties {
+        private String leaderId;
         private int term = 0;
-        private int commitIndex = 0;
+        private int lastTerm = 0;
+        private int lastIndex = 0;
         private int lastApplied = 0;
         final int membershipSize;
-        private String leaderId;
 
         public RaftProperties(int membershipSize) {
             this.membershipSize = membershipSize;
@@ -92,14 +93,6 @@ public class RaftSystem implements SystemType {
 
         public void incrementTerm() {
             term += 1;
-        }
-
-        public void term(int term) {
-            this.term = term;
-        }
-
-        public int term() {
-            return term;
         }
 
         public void leaderId(String leaderId) {
@@ -110,6 +103,28 @@ public class RaftSystem implements SystemType {
             return leaderId;
         }
 
+        public void term(int term) {
+            this.term = term;
+        }
 
+        public int term() {
+            return term;
+        }
+
+        public int lastTerm() {
+            return lastTerm;
+        }
+
+        public void lastTerm(int lastTerm) {
+            this.lastTerm = lastTerm;
+        }
+
+        public int lastIndex() {
+            return lastIndex;
+        }
+
+        public void lastIndex(int lastIndex) {
+            this.lastIndex = lastIndex;
+        }
     }
 }

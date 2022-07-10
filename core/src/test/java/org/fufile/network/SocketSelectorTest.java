@@ -70,7 +70,7 @@ public class SocketSelectorTest {
             selectable.registerNewConnections();
         }
         for (int i = 0; i < connectionsNumber; i++) {
-            selectable.send(new Sender(Integer.toString(i), new TestStringMessage("number:0")));
+            selectable.send(Integer.toString(i), new Sender(new TestStringMessage("number:0")));
         }
         while (!Arrays.stream(receiveCount).allMatch(count -> count == sendNumber)) {
             selectable.doPool(500);
@@ -86,7 +86,7 @@ public class SocketSelectorTest {
                 Assertions.assertEquals(receivedNumber, number);
                 receiveCount[channelId] = receivedNumber + 1;
                 if (receiveCount[channelId] != sendNumber) {
-                    selectable.send(new Sender(channel.nodeId(), new TestStringMessage("number:" + receiveCount[channelId])));
+                    selectable.send(channel.nodeId(), new Sender(new TestStringMessage("number:" + receiveCount[channelId])));
                 }
                 iterator.remove();
             }
@@ -105,7 +105,7 @@ public class SocketSelectorTest {
         selectable.connect("1", addr);
         selectable.doPool(0);
         selectable.registerNewConnections();
-        selectable.send(new Sender("1", new TestStringMessage(data)));
+        selectable.send("1", new Sender(new TestStringMessage(data)));
         String receive;
         while (true) {
             selectable.doPool(0);
@@ -154,7 +154,7 @@ public class SocketSelectorTest {
         }
 
         @Override
-        protected void sendHeartbeat(FufileChannel channel) {
+        protected void sendHeartbeat(FufileSocketChannel channel) {
         }
     }
 
@@ -165,7 +165,7 @@ public class SocketSelectorTest {
         }
 
         @Override
-        protected void sendHeartbeat(FufileChannel channel) {
+        protected void sendHeartbeat(FufileSocketChannel channel) {
         }
     }
 }

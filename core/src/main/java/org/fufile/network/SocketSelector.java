@@ -125,8 +125,8 @@ public class SocketSelector extends FufileSelector implements SocketSelectable {
     /**
      * Client sends a heartbeat when the server is successfully connected.
      */
-    protected void sendHeartbeat(FufileChannel channel) {
-        send(new Sender(channel.nodeId(), new HeartbeatRequestMessage(nodeId)));
+    protected void sendHeartbeat(FufileSocketChannel channel) {
+        channel.send(new Sender(new HeartbeatRequestMessage(nodeId)));
         checkHeartBeatHandler.scheduleHeartbeatTask(channel);
         if (!checkHeartBeatHandler.containsCheckHeartbeatTask(channel.nodeId())) {
             checkHeartBeatHandler.scheduleHeartbeatTimeoutTask(channel);
@@ -137,8 +137,8 @@ public class SocketSelector extends FufileSelector implements SocketSelectable {
      *
      */
     @Override
-    public void send(Sender sender) {
-        FufileSocketChannel socketChannel = connectedNodes.get(sender.nodeId());
+    public void send(String nodeId, Sender sender) {
+        FufileSocketChannel socketChannel = connectedNodes.get(nodeId);
         socketChannel.send(sender);
     }
 

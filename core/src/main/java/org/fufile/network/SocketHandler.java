@@ -215,7 +215,7 @@ public class SocketHandler implements Runnable {
             return new TimerTask(heartbeatInterval) {
                 @Override
                 public void run() {
-                    socketSelector.send(new Sender(channel.nodeId(), new HeartbeatRequestMessage(nodeId)));
+                    socketSelector.send(channel.nodeId(), new Sender(new HeartbeatRequestMessage(nodeId)));
                     timerWheelUtil.schedule(this);
                 }
             };

@@ -14,30 +14,14 @@
  * under the License.
  */
 
-package org.fufile.transfer;
+package org.fufile.raft;
+
+import org.fufile.transfer.FufileMessage;
 
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 
-public class VoteRequestMessage implements FufileMessage {
-
-    private int term;
-    private int lastTerm;
-    private int lastIndex;
-    private ByteBuffer payload;
-
-    public VoteRequestMessage(ByteBuffer payload) {
-        this.payload = payload;
-    }
-
-    public VoteRequestMessage(int term,
-                              int lastTerm,
-                              int lastIndex) {
-        this.term = term;
-        this.lastTerm = lastTerm;
-        this.lastIndex = lastIndex;
-    }
-
+public class LogRecord implements FufileMessage {
     @Override
     public ByteBuffer serialize() {
         return null;
@@ -47,6 +31,4 @@ public class VoteRequestMessage implements FufileMessage {
     public void deserialize() throws UnsupportedEncodingException {
 
     }
-
-
 }
