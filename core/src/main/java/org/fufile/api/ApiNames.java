@@ -16,11 +16,15 @@
 
 package org.fufile.api;
 
+import org.fufile.transfer.AppendRequestMessage;
+import org.fufile.transfer.AppendResponseMessage;
 import org.fufile.transfer.FufileMessage;
 import org.fufile.transfer.HeartbeatRequestMessage;
 import org.fufile.transfer.HeartbeatResponseMessage;
 import org.fufile.transfer.LeaderHeartbeatRequestMessage;
 import org.fufile.transfer.LeaderHeartbeatResponseMessage;
+import org.fufile.transfer.LeaderSyncRequestMessage;
+import org.fufile.transfer.LeaderSyncResponseMessage;
 import org.fufile.transfer.TestStringMessage;
 import org.fufile.transfer.VoteRequestMessage;
 import org.fufile.transfer.VoteResponseMessage;
@@ -40,7 +44,11 @@ public enum ApiNames {
     VOTE((short) 1, "vote",
             payload -> new VoteRequestMessage(payload), payload -> new VoteResponseMessage(payload)),
     LEADER_HEARTBEAT((short) 2, "leader heartbeat",
-            payload -> new LeaderHeartbeatRequestMessage(payload), payload -> new LeaderHeartbeatResponseMessage(payload));
+            payload -> new LeaderHeartbeatRequestMessage(payload), payload -> new LeaderHeartbeatResponseMessage(payload)),
+    LEADER_SYNC((short) 3, "leader sync",
+            payload -> new LeaderSyncRequestMessage(payload), payload -> new LeaderSyncResponseMessage(payload)),
+    APPEND((short) 4, "append",
+            payload -> new AppendRequestMessage(payload), payload -> new AppendResponseMessage(payload));
 
 
     public final short id;

@@ -19,24 +19,12 @@ package org.fufile.transfer;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 
-public class LeaderHeartbeatRequestMessage implements FufileMessage {
+public class AppendResponseMessage implements FufileMessage {
 
     private ByteBuffer payload;
 
-    private String nodeId;
-    private int term;
-    private int committedLogTerm;
-    private long committedLogIndex;
-
-    public LeaderHeartbeatRequestMessage(ByteBuffer payload) {
+    public AppendResponseMessage(ByteBuffer payload) {
         this.payload = payload;
-    }
-
-    public LeaderHeartbeatRequestMessage(String nodeId, int term, int committedLogTerm, long committedLogIndex) {
-        this.nodeId = nodeId;
-        this.term = term;
-        this.committedLogTerm = committedLogTerm;
-        this.committedLogIndex = committedLogIndex;
     }
 
     @Override
@@ -47,21 +35,5 @@ public class LeaderHeartbeatRequestMessage implements FufileMessage {
     @Override
     public void deserialize() throws UnsupportedEncodingException {
 
-    }
-
-    public String nodeId() {
-        return nodeId;
-    }
-
-    public int term() {
-        return term;
-    }
-
-    public int committedLogTerm() {
-        return committedLogTerm;
-    }
-
-    public long committedLogIndex() {
-        return committedLogIndex;
     }
 }

@@ -21,9 +21,10 @@ import java.nio.ByteBuffer;
 
 public class VoteRequestMessage implements FufileMessage {
 
+    private String nodeId;
     private int term;
-    private int lastTerm;
-    private int lastIndex;
+    private int lastLogTerm;
+    private long lastLogIndex;
     private ByteBuffer payload;
 
     public VoteRequestMessage(ByteBuffer payload) {
@@ -31,11 +32,11 @@ public class VoteRequestMessage implements FufileMessage {
     }
 
     public VoteRequestMessage(int term,
-                              int lastTerm,
-                              int lastIndex) {
+                              int lastLogTerm,
+                              long lastLogIndex) {
         this.term = term;
-        this.lastTerm = lastTerm;
-        this.lastIndex = lastIndex;
+        this.lastLogTerm = lastLogTerm;
+        this.lastLogIndex = lastLogIndex;
     }
 
     @Override
@@ -48,5 +49,19 @@ public class VoteRequestMessage implements FufileMessage {
 
     }
 
+    public String nodeId() {
+        return nodeId;
+    }
 
+    public int term() {
+        return term;
+    }
+
+    public int lastLogTerm() {
+        return lastLogTerm;
+    }
+
+    public long lastLogIndex() {
+        return lastLogIndex;
+    }
 }

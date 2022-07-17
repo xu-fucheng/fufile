@@ -14,36 +14,20 @@
  * under the License.
  */
 
-package org.fufile.transfer;
+package org.fufile.raft;
 
-import java.io.UnsupportedEncodingException;
-import java.nio.ByteBuffer;
+import org.fufile.network.FufileSocketChannel;
+import org.fufile.transfer.FufileMessage;
 
-public class VoteResponseMessage implements FufileMessage {
+public class SyncState implements MembershipState {
 
-    private ByteBuffer payload;
+    @Override
+    public void handleRequestMessage(FufileMessage message, FufileSocketChannel channel) {
 
-    private boolean vote;
-
-    public VoteResponseMessage(boolean vote) {
-        this.vote = vote;
-    }
-
-    public VoteResponseMessage(ByteBuffer payload) {
-        this.payload = payload;
     }
 
     @Override
-    public ByteBuffer serialize() {
-        return null;
-    }
+    public void handleResponseMessage(FufileMessage message, FufileSocketChannel channel) {
 
-    @Override
-    public void deserialize() throws UnsupportedEncodingException {
-
-    }
-
-    public boolean vote() {
-        return vote;
     }
 }

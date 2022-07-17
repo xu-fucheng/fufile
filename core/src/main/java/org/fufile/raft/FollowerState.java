@@ -20,17 +20,23 @@ import org.fufile.config.FufileConfig;
 import org.fufile.network.FufileSocketChannel;
 import org.fufile.network.Sender;
 import org.fufile.raft.RaftSystem.RaftProperties;
+import org.fufile.transfer.AppendRequestMessage;
 import org.fufile.transfer.FufileMessage;
 import org.fufile.transfer.LeaderHeartbeatRequestMessage;
 import org.fufile.transfer.LeaderHeartbeatResponseMessage;
 import org.fufile.transfer.VoteRequestMessage;
+import org.fufile.transfer.VoteResponseMessage;
 import org.fufile.utils.TimerTask;
 import org.fufile.utils.TimerWheelUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 import java.util.Random;
 
 public class FollowerState implements MembershipState {
+
+    private static final Logger logger = LoggerFactory.getLogger(FollowerState.class);
 
     private final Map<String, FufileSocketChannel> connectedNodes;
     private final TimerWheelUtil timerWheelUtil;
@@ -50,7 +56,7 @@ public class FollowerState implements MembershipState {
         this.properties = properties;
         this.system = system;
 
-        scheduleElectionTimeoutTask();
+        scheduleElectionTimeoutTask(rand.nextInt(10000) + 10000);
     }
 
 
@@ -60,27 +66,63 @@ public class FollowerState implements MembershipState {
     @Override
     public void handleRequestMessage(FufileMessage message, FufileSocketChannel channel) {
         if (message instanceof LeaderHeartbeatRequestMessage) {
-            LeaderHeartbeatRequestMessage leaderHeartbeatRequestMessage = (LeaderHeartbeatRequestMessage) message;
-            if (leaderHeartbeatRequestMessage.term() < properties.term()) {
-                // reject
-                channel.send(new Sender(new LeaderHeartbeatResponseMessage(false)));
+            handleLeaderHeartbeatRequestMessage((LeaderHeartbeatRequestMessage) message, channel);
+        } else if (message instanceof VoteRequestMessage) {
+            handleVoteRequestMessage((VoteRequestMessage) message, channel);
+        } else if (message instanceof AppendRequestMessage) {
+            logger.info("");
+        }
+    }
 
+    private void handleLeaderHeartbeatRequestMessage(LeaderHeartbeatRequestMessage message, FufileSocketChannel channel) {
+        LeaderHeartbeatRequestMessage leaderHeartbeatRequestMessage = message;
+        if (leaderHeartbeatRequestMessage.term() == properties.term()) {
+            if (properties.leaderId().equals(leaderHeartbeatRequestMessage.nodeId())) {
+                handleLeaderHeartbeat(channel);
             } else {
-                if (properties.leaderId().equals(leaderHeartbeatRequestMessage.nodeId())) {
-                    channel.send(new Sender(new LeaderHeartbeatResponseMessage(true)));
-                } else {
-                    //
-                    channel.send(new Sender(new LeaderHeartbeatResponseMessage(true)));
-                }
-
-
+                logger.error("There are two leaders [{}][{}] for the same term {}.", properties.leaderId(),
+                        leaderHeartbeatRequestMessage.nodeId(), properties.term());
             }
+        } else if (leaderHeartbeatRequestMessage.term() < properties.term()) {
+            // reject
+            channel.send(new Sender(new LeaderHeartbeatResponseMessage(false)));
+        } else {
+            acceptNewLeader(channel, leaderHeartbeatRequestMessage);
+        }
+    }
 
+    private void acceptNewLeader(FufileSocketChannel channel, LeaderHeartbeatRequestMessage leaderHeartbeatRequestMessage) {
+        // accept new leader
+        channel.send(new Sender(new LeaderHeartbeatResponseMessage(true)));
+        properties.leaderId(leaderHeartbeatRequestMessage.nodeId());
+        properties.term(leaderHeartbeatRequestMessage.term());
+        scheduleElectionTimeoutTask(rand.nextInt(10000) + 10000);
+        // sync log
+//                if (leaderHeartbeatRequestMessage.term() > properties.lastLogTerm()) {
+//                    system.transitionTo(new SyncState());
+//                }
+    }
 
-            electionTimeoutTask.cancelled();
-            scheduleElectionTimeoutTask();
+    private void handleLeaderHeartbeat(FufileSocketChannel channel) {
+        channel.send(new Sender(new LeaderHeartbeatResponseMessage(true)));
+        scheduleElectionTimeoutTask(rand.nextInt(10000) + 10000);
+        // compare committedIndex
+    }
 
-
+    private void handleVoteRequestMessage(VoteRequestMessage message, FufileSocketChannel channel) {
+        VoteRequestMessage voteRequestMessage = message;
+        boolean vote = voteRequestMessage.term() > properties.term()
+                && (voteRequestMessage.lastLogTerm() > properties.lastLogTerm()
+                || voteRequestMessage.lastLogTerm() == properties.lastLogTerm()
+                && voteRequestMessage.lastLogIndex() >= properties.lastLogIndex());
+        if (vote) {
+            channel.send(new Sender(new VoteResponseMessage(true)));
+            properties.votedFor(voteRequestMessage.nodeId());
+            properties.term(voteRequestMessage.term());
+            // wait max elect timeout to elect
+            scheduleElectionTimeoutTask(20000);
+        } else {
+            channel.send(new Sender(new VoteResponseMessage(false)));
         }
     }
 
@@ -89,12 +131,12 @@ public class FollowerState implements MembershipState {
 
     }
 
-    private void scheduleElectionTimeoutTask() {
-        timerWheelUtil.schedule(electionTimeoutTask());
+    private void scheduleElectionTimeoutTask(long delayMs) {
+        timerWheelUtil.schedule(electionTimeoutTask(delayMs));
     }
 
-    private TimerTask electionTimeoutTask() {
-        TimerTask task = new TimerTask(rand.nextInt(10000) + 10000) {
+    private TimerTask electionTimeoutTask(long delayMs) {
+        TimerTask task = new TimerTask(delayMs) {
             @Override
             public void run() {
                 // Check whether the number of connected servers in the cluster reaches the majority.
@@ -106,8 +148,8 @@ public class FollowerState implements MembershipState {
                     for (FufileSocketChannel channel : connectedNodes.values()) {
                         channel.send(new Sender(new VoteRequestMessage(
                                 properties.term(),
-                                properties.lastTerm(),
-                                properties.lastIndex())));
+                                properties.lastLogTerm(),
+                                properties.lastLogIndex())));
                     }
 
                 } else {
@@ -116,6 +158,9 @@ public class FollowerState implements MembershipState {
                 }
             }
         };
+        if (electionTimeoutTask != null) {
+            electionTimeoutTask.cancelled();
+        }
         electionTimeoutTask = task;
         return task;
     }

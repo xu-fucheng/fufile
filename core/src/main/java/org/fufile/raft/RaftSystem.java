@@ -24,6 +24,11 @@ import org.fufile.utils.TimerWheelUtil;
 
 import java.util.Map;
 
+/**
+ * startup
+ * state: follower
+ * random election timeout
+ */
 public class RaftSystem implements SystemType {
 
     private String votedFor;
@@ -57,17 +62,10 @@ public class RaftSystem implements SystemType {
         membershipState.handleRequestMessage(message, channel);
 
 
-
-
     }
 
     @Override
     public void handleResponseMessage(FufileMessage message, FufileSocketChannel channel) {
-
-
-
-
-
 
 
     }
@@ -77,14 +75,16 @@ public class RaftSystem implements SystemType {
     }
 
 
-
-
     class RaftProperties {
         private String leaderId;
+        private String votedFor;
         private int term = 0;
-        private int lastTerm = 0;
-        private int lastIndex = 0;
-        private int lastApplied = 0;
+        private int lastLogTerm = 0;
+        private long lastLogIndex = 0;
+        private int lastCommittedLogTerm = 0;
+        private long lastCommittedLogIndex = 0;
+        private int lastAppliedLogIndex = 0;
+
         final int membershipSize;
 
         public RaftProperties(int membershipSize) {
@@ -103,6 +103,14 @@ public class RaftSystem implements SystemType {
             return leaderId;
         }
 
+        public String votedFor() {
+            return votedFor;
+        }
+
+        public void votedFor(String votedFor) {
+            this.votedFor = votedFor;
+        }
+
         public void term(int term) {
             this.term = term;
         }
@@ -111,20 +119,20 @@ public class RaftSystem implements SystemType {
             return term;
         }
 
-        public int lastTerm() {
-            return lastTerm;
+        public int lastLogTerm() {
+            return lastLogTerm;
         }
 
-        public void lastTerm(int lastTerm) {
-            this.lastTerm = lastTerm;
+        public void lastLogTerm(int lastLogTerm) {
+            this.lastLogTerm = lastLogTerm;
         }
 
-        public int lastIndex() {
-            return lastIndex;
+        public long lastLogIndex() {
+            return lastLogIndex;
         }
 
-        public void lastIndex(int lastIndex) {
-            this.lastIndex = lastIndex;
+        public void lastLogIndex(long lastLogIndex) {
+            this.lastLogIndex = lastLogIndex;
         }
     }
 }
