@@ -23,6 +23,8 @@ public class AppendRequestMessage implements FufileMessage {
 
     private ByteBuffer payload;
 
+
+
     public AppendRequestMessage(ByteBuffer payload) {
         this.payload = payload;
     }

@@ -16,18 +16,22 @@
 
 package org.fufile.raft;
 
-import org.fufile.network.FufileSocketChannel;
-import org.fufile.transfer.FufileMessage;
+import org.fufile.raft.RaftSystem.RaftProperties;
+import org.fufile.utils.TimerWheelUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public class SyncState implements MembershipState {
+import java.util.Map;
 
-    @Override
-    public void handleRequestMessage(FufileMessage message, FufileSocketChannel channel) {
+public class SyncState extends MembershipStateSpace {
 
+    private static final Logger logger = LoggerFactory.getLogger(InitialState.class);
+
+    public SyncState(RaftProperties properties,
+                       RaftSystem system,
+                       Map connectedNodes,
+                       TimerWheelUtil timerWheelUtil) {
+        super(logger, properties, system, connectedNodes, timerWheelUtil);
     }
 
-    @Override
-    public void handleResponseMessage(FufileMessage message, FufileSocketChannel channel) {
-
-    }
 }

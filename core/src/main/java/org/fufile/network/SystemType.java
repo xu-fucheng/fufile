@@ -16,6 +16,7 @@
 
 package org.fufile.network;
 
+import org.fufile.raft.MembershipState;
 import org.fufile.transfer.FufileMessage;
 
 public interface SystemType {
@@ -23,4 +24,8 @@ public interface SystemType {
     void handleRequestMessage(FufileMessage message, FufileSocketChannel channel);
 
     void handleResponseMessage(FufileMessage message, FufileSocketChannel channel);
+
+    void transitionTo(String state, boolean scheduleRandomElectionTimeoutTask);
+
+    MembershipState membershipState(String state);
 }

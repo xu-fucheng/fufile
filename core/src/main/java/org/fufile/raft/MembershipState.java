@@ -21,8 +21,14 @@ import org.fufile.transfer.FufileMessage;
 
 public interface MembershipState {
 
+    String LEADER_STATE = "Leader";
+    String CANDIDATE_STATE = "Candidate";
+    String FOLLOWER_STATE = "Follower";
+    String SYNC_STATE = "Sync";
 
     void handleRequestMessage(FufileMessage message, FufileSocketChannel channel);
 
     void handleResponseMessage(FufileMessage message, FufileSocketChannel channel);
+
+    void scheduleRandomElectionTimeoutTask();
 }

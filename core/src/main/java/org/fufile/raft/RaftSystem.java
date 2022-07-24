@@ -21,59 +21,57 @@ import org.fufile.network.FufileSocketChannel;
 import org.fufile.network.SystemType;
 import org.fufile.transfer.FufileMessage;
 import org.fufile.utils.TimerWheelUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
  * startup
- * state: follower
- * random election timeout
  */
 public class RaftSystem implements SystemType {
 
-    private String votedFor;
-    private long heartbeatInterval = 2 * 1000;
-    private long minElectionTimeout = 10 * 1000;
-    private long maxElectionTimeout = 20 * 1000;
+    private static final Logger logger = LoggerFactory.getLogger(RaftSystem.class);
 
-    private MembershipState membershipState;
+    private final RaftProperties properties;
     private final Map<String, FufileSocketChannel> connectedNodes;
     private final TimerWheelUtil timerWheelUtil;
-
-
-    private int membershipSize;
-    private final RaftProperties properties;
-
+    private MembershipState membershipState;
+    private final Map<String, MembershipState> membershipStates = new HashMap<>();
 
     public RaftSystem(FufileConfig config,
                       Map connectedNodes,
                       TimerWheelUtil timerWheelUtil) {
-
+        this.properties = new RaftProperties(config);
         this.connectedNodes = connectedNodes;
         this.timerWheelUtil = timerWheelUtil;
-        this.properties = new RaftProperties(membershipSize);
-        this.membershipState = new FollowerState(config, connectedNodes, timerWheelUtil, properties, this);
-
-
+        this.membershipState = new InitialState(properties, this, connectedNodes, timerWheelUtil);
+        membershipStates.put(MembershipState.LEADER_STATE, new LeaderState(properties, this, connectedNodes, timerWheelUtil));
+        membershipStates.put(MembershipState.CANDIDATE_STATE, new CandidateState(properties, this, connectedNodes, timerWheelUtil));
+        membershipStates.put(MembershipState.FOLLOWER_STATE, new FollowerState(properties, this, connectedNodes, timerWheelUtil));
+        membershipStates.put(MembershipState.SYNC_STATE, new SyncState(properties, this, connectedNodes, timerWheelUtil));
     }
 
     @Override
     public void handleRequestMessage(FufileMessage message, FufileSocketChannel channel) {
         membershipState.handleRequestMessage(message, channel);
-
-
     }
 
     @Override
     public void handleResponseMessage(FufileMessage message, FufileSocketChannel channel) {
-
-
+        membershipState.handleResponseMessage(message, channel);
     }
 
-    public void transitionTo(MembershipState state) {
-        this.membershipState = state;
+    @Override
+    public void transitionTo(String state, boolean scheduleRandomElectionTimeoutTask) {
+        this.membershipState = membershipStates.get(state);
     }
 
+    @Override
+    public MembershipState membershipState(String state) {
+        return membershipStates.get(state);
+    }
 
     class RaftProperties {
         private String leaderId;
@@ -85,10 +83,13 @@ public class RaftSystem implements SystemType {
         private long lastCommittedLogIndex = 0;
         private int lastAppliedLogIndex = 0;
 
+        final long heartbeatInterval = 2 * 1000;
+        final long minElectionTimeout = 10 * 1000;
+        final long maxElectionTimeout = 20 * 1000;
         final int membershipSize;
 
-        public RaftProperties(int membershipSize) {
-            this.membershipSize = membershipSize;
+        public RaftProperties(FufileConfig config) {
+            this.membershipSize = 1;
         }
 
         public void incrementTerm() {
