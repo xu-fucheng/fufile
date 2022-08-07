@@ -45,7 +45,7 @@ public class CandidateState extends MembershipStateSpace {
             handleLeaderHeartbeat(channel);
         } else {
             // reject
-
+            channel.send(new Sender(new LeaderHeartbeatResponseMessage(false)));
         }
 
 

@@ -42,19 +42,18 @@ public class FollowerState extends MembershipStateSpace {
 
     @Override
     protected void handleLeaderHeartbeatRequestMessage(LeaderHeartbeatRequestMessage message, FufileSocketChannel channel) {
-        LeaderHeartbeatRequestMessage leaderHeartbeatRequestMessage = message;
-        if (leaderHeartbeatRequestMessage.term() == properties.term()) {
-            if (properties.leaderId().equals(leaderHeartbeatRequestMessage.nodeId())) {
+        if (message.term() == properties.term()) {
+            if (properties.leaderId().equals(message.nodeId())) {
                 handleLeaderHeartbeat(channel);
             } else {
                 logger.error("There are two leaders [{}][{}] for the same term {}.", properties.leaderId(),
-                        leaderHeartbeatRequestMessage.nodeId(), properties.term());
+                        message.nodeId(), properties.term());
             }
-        } else if (leaderHeartbeatRequestMessage.term() < properties.term()) {
+        } else if (message.term() < properties.term()) {
             // reject
             channel.send(new Sender(new LeaderHeartbeatResponseMessage(false)));
         } else {
-            acceptNewLeader(channel, leaderHeartbeatRequestMessage);
+            acceptNewLeader(channel, message);
         }
     }
 

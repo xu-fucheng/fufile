@@ -35,15 +35,21 @@ public class RaftSystem implements SystemType {
     private static final Logger logger = LoggerFactory.getLogger(RaftSystem.class);
 
     private final RaftProperties properties;
+    private final RaftLog raftLog;
+    private final RaftBusiness raftBusiness;
     private final Map<String, FufileSocketChannel> connectedNodes;
     private final TimerWheelUtil timerWheelUtil;
     private MembershipState membershipState;
     private final Map<String, MembershipState> membershipStates = new HashMap<>();
 
     public RaftSystem(FufileConfig config,
+                      RaftLog raftLog,
+                      RaftBusiness raftBusiness,
                       Map connectedNodes,
                       TimerWheelUtil timerWheelUtil) {
         this.properties = new RaftProperties(config);
+        this.raftLog = raftLog;
+        this.raftBusiness = raftBusiness;
         this.connectedNodes = connectedNodes;
         this.timerWheelUtil = timerWheelUtil;
         this.membershipState = new InitialState(properties, this, connectedNodes, timerWheelUtil);

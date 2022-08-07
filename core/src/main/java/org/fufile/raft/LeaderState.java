@@ -16,7 +16,11 @@
 
 package org.fufile.raft;
 
+import org.fufile.network.FufileSocketChannel;
+import org.fufile.network.Sender;
 import org.fufile.raft.RaftSystem.RaftProperties;
+import org.fufile.transfer.LeaderHeartbeatRequestMessage;
+import org.fufile.transfer.LeaderHeartbeatResponseMessage;
 import org.fufile.utils.TimerWheelUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,11 +32,40 @@ public class LeaderState extends MembershipStateSpace {
     private static final Logger logger = LoggerFactory.getLogger(InitialState.class);
 
     public LeaderState(RaftProperties properties,
-                        RaftSystem system,
-                        Map connectedNodes,
-                        TimerWheelUtil timerWheelUtil) {
+                       RaftSystem system,
+                       Map connectedNodes,
+                       TimerWheelUtil timerWheelUtil) {
         super(logger, properties, system, connectedNodes, timerWheelUtil);
     }
 
+    @Override
+    protected void handleLeaderHeartbeatRequestMessage(LeaderHeartbeatRequestMessage message, FufileSocketChannel channel) {
+        // Recovering from a split brain
+        if (message.term() > properties.term()) {
+            acceptNewLeader(channel, message);
+        } else if (message.term() < properties.term()) {
+            // reject
+            channel.send(new Sender(new LeaderHeartbeatResponseMessage(false)));
+        } else {
+            logger.error("There are two leaders [{}][{}] for the same term {}.", properties.leaderId(),
+                    message.nodeId(), properties.term());
+        }
+    }
 
+    private void acceptNewLeader(FufileSocketChannel channel, LeaderHeartbeatRequestMessage leaderHeartbeatRequestMessage) {
+        // accept new leader
+        channel.send(new Sender(new LeaderHeartbeatResponseMessage(true)));
+        properties.leaderId(leaderHeartbeatRequestMessage.nodeId());
+        properties.term(leaderHeartbeatRequestMessage.term());
+        system.transitionTo(MembershipState.FOLLOWER_STATE, true);
+        // sync log
+//                if (leaderHeartbeatRequestMessage.term() > properties.lastLogTerm()) {
+//                    system.transitionTo(new SyncState());
+//                }
+    }
+
+    @Override
+    protected void handleLeaderHeartbeatResponseMessage(LeaderHeartbeatResponseMessage message, FufileSocketChannel channel) {
+
+    }
 }
