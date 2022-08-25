@@ -38,17 +38,17 @@ import java.util.stream.Collectors;
 public enum ApiNames {
 
     TEST((short) -1, "test",
-            payload -> new TestStringMessage(payload), payload -> new TestStringMessage(payload)),
+            TestStringMessage::new, TestStringMessage::new),
     HEARTBEAT((short) 0, "heartbeat",
-            payload -> new HeartbeatRequestMessage(payload), payload -> new HeartbeatResponseMessage(payload)),
+            HeartbeatRequestMessage::new, HeartbeatResponseMessage::new),
     VOTE((short) 1, "vote",
-            payload -> new VoteRequestMessage(payload), payload -> new VoteResponseMessage(payload)),
+            VoteRequestMessage::new, VoteResponseMessage::new),
     LEADER_HEARTBEAT((short) 2, "leader heartbeat",
-            payload -> new LeaderHeartbeatRequestMessage(payload), payload -> new LeaderHeartbeatResponseMessage(payload)),
+            LeaderHeartbeatRequestMessage::new, LeaderHeartbeatResponseMessage::new),
     LEADER_SYNC((short) 3, "leader sync",
-            payload -> new LeaderSyncRequestMessage(payload), payload -> new LeaderSyncResponseMessage(payload)),
+            LeaderSyncRequestMessage::new, LeaderSyncResponseMessage::new),
     APPEND((short) 4, "append",
-            payload -> new AppendRequestMessage(payload), payload -> new AppendResponseMessage(payload));
+            AppendRequestMessage::new, AppendResponseMessage::new);
 
 
     public final short id;
